@@ -254,7 +254,7 @@ if (shareBtn) {
     });
 }
 
-/* ---------- Vídeos em stories: abre no popup e navega entre todos ---------- */
+/* ---------- Stories "Passou por aqui" ---------- */
 const storiesTrack = document.querySelector('.stories__track');
 const storyButtons = Array.from(document.querySelectorAll('.story__btn'));
 const videoModal = document.getElementById('video-modal');
@@ -264,105 +264,212 @@ const videoModalBars = document.getElementById('video-modal-bars');
 const videoPrevBtn = document.getElementById('video-prev');
 const videoNextBtn = document.getElementById('video-next');
 
-let currentVideoIndex = -1;
+const STORY_IMAGE_DURATION = 15000; // imagem fica 15s; vídeo usa a própria duração
 
-function buildVideoBars() {
+let storyIndex = -1;
+let storyMedia = null;      // <img> ou <video> em exibição
+let storyDuration = STORY_IMAGE_DURATION;
+let storyElapsed = 0;       // ms já corridos do story atual
+let storyLastTick = 0;
+let storyRaf = null;
+let storyPaused = false;
+
+function buildStoryBars() {
     if (!videoModalBars) return;
 
     videoModalBars.innerHTML = storyButtons
-        .map(() => '<span class="video-modal__bar"></span>')
+        .map(() => '<span class="video-modal__bar"><span class="video-modal__fill"></span></span>')
         .join('');
 }
 
-function updateVideoBars() {
+function paintStoryBars() {
     if (!videoModalBars) return;
 
-    videoModalBars.querySelectorAll('.video-modal__bar').forEach((bar, index) => {
-        bar.classList.toggle('is-seen', index < currentVideoIndex);
-        bar.classList.toggle('is-current', index === currentVideoIndex);
+    const percent = storyDuration > 0
+        ? Math.min(100, (storyElapsed / storyDuration) * 100)
+        : 0;
+
+    videoModalBars.querySelectorAll('.video-modal__fill').forEach((fill, index) => {
+        if (index < storyIndex) fill.style.width = '100%';
+        else if (index === storyIndex) fill.style.width = `${percent}%`;
+        else fill.style.width = '0%';
     });
 
-    if (videoPrevBtn) videoPrevBtn.disabled = currentVideoIndex <= 0;
-    if (videoNextBtn) videoNextBtn.disabled = currentVideoIndex >= storyButtons.length - 1;
+    if (videoPrevBtn) videoPrevBtn.disabled = storyIndex <= 0;
+    if (videoNextBtn) videoNextBtn.disabled = storyIndex >= storyButtons.length - 1;
 }
 
-function closeVideoModal() {
+function stopStoryLoop() {
+    if (storyRaf) cancelAnimationFrame(storyRaf);
+    storyRaf = null;
+}
+
+function storyLoop(now) {
+    storyRaf = requestAnimationFrame(storyLoop);
+
+    if (storyPaused) {
+        storyLastTick = now;
+        return;
+    }
+
+    // Vídeo manda no relógio; imagem conta o tempo que passou
+    if (storyMedia && storyMedia.tagName === 'VIDEO') {
+        if (storyMedia.duration && Number.isFinite(storyMedia.duration)) {
+            storyDuration = storyMedia.duration * 1000;
+        }
+        storyElapsed = storyMedia.currentTime * 1000;
+    } else {
+        storyElapsed += now - storyLastTick;
+    }
+
+    storyLastTick = now;
+    paintStoryBars();
+
+    if (storyElapsed >= storyDuration) goToStory(1);
+}
+
+function startStoryLoop() {
+    stopStoryLoop();
+    storyLastTick = performance.now();
+    storyRaf = requestAnimationFrame(storyLoop);
+}
+
+function clearStoryMedia() {
+    if (storyMedia && storyMedia.tagName === 'VIDEO') {
+        storyMedia.pause();
+        storyMedia.removeAttribute('src');
+        storyMedia.load();
+    }
+
+    videoModalPlayer.innerHTML = '';
+    storyMedia = null;
+}
+
+function closeStoryModal() {
     if (!videoModal) return;
 
-    videoModal.classList.remove('active');
-    videoModalPlayer.innerHTML = ''; // remove o iframe = para o vídeo
-    currentVideoIndex = -1;
+    stopStoryLoop();
+    clearStoryMedia();
+    videoModal.classList.remove('active', 'is-paused');
+    storyIndex = -1;
+    storyElapsed = 0;
+    storyPaused = false;
     document.body.style.overflow = '';
 }
 
-function playVideoAt(index) {
+function openStoryAt(index) {
     if (!videoModal || index < 0 || index >= storyButtons.length) return;
 
-    const videoId = storyButtons[index].dataset.video;
-    if (!videoId) return;
+    const btn = storyButtons[index];
+    const src = btn.dataset.src;
+    if (!src) return;
 
-    currentVideoIndex = index;
+    stopStoryLoop();
+    clearStoryMedia();
 
-    const params = new URLSearchParams({
-        autoplay: '1',
-        playsinline: '1',
-        rel: '0',              // sem vídeos de outros canais no fim
-        modestbranding: '1',   // sem logo do YouTube nos controles
-        iv_load_policy: '3',   // sem anotações
-        color: 'white'
-    });
+    storyIndex = index;
+    storyElapsed = 0;
+    storyPaused = false;
+    videoModal.classList.remove('is-paused');
 
-    const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params}`;
-    iframe.title = 'Vídeo do YouTube';
-    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-    iframe.allowFullscreen = true;
+    if (btn.dataset.type === 'video') {
+        const video = document.createElement('video');
+        video.src = src;
+        video.playsInline = true;
+        video.autoplay = true;
+        video.preload = 'auto';
+        video.setAttribute('playsinline', '');
 
-    videoModalPlayer.innerHTML = ''; // só um vídeo por vez
-    videoModalPlayer.appendChild(iframe);
+        // Só um vídeo por vez e sem estourar o som de cara
+        video.addEventListener('loadedmetadata', () => {
+            storyDuration = (video.duration && Number.isFinite(video.duration))
+                ? video.duration * 1000
+                : STORY_IMAGE_DURATION;
+        });
+
+        video.addEventListener('ended', () => goToStory(1));
+
+        video.play().catch(() => {
+            // navegador bloqueou o som: repete mudo
+            video.muted = true;
+            video.play().catch(() => {});
+        });
+
+        storyDuration = STORY_IMAGE_DURATION; // até a duração real chegar
+        storyMedia = video;
+        videoModalPlayer.appendChild(video);
+    } else {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = '';
+
+        storyDuration = STORY_IMAGE_DURATION;
+        storyMedia = img;
+        videoModalPlayer.appendChild(img);
+    }
 
     videoModal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    updateVideoBars();
+    paintStoryBars();
+    startStoryLoop();
 }
 
-function goToVideo(step) {
-    const next = currentVideoIndex + step;
+function goToStory(step) {
+    const next = storyIndex + step;
 
-    // nas pontas a seta some, então aqui apenas ignoramos
-    if (next < 0 || next >= storyButtons.length) return;
+    if (next < 0) return;
 
-    playVideoAt(next);
+    // passou do último: fecha, como nos stories
+    if (next >= storyButtons.length) {
+        closeStoryModal();
+        return;
+    }
+
+    openStoryAt(next);
+}
+
+function toggleStoryPause() {
+    storyPaused = !storyPaused;
+    videoModal.classList.toggle('is-paused', storyPaused);
+
+    if (!storyMedia || storyMedia.tagName !== 'VIDEO') return;
+
+    if (storyPaused) storyMedia.pause();
+    else storyMedia.play().catch(() => {});
 }
 
 if (storiesTrack) {
-    buildVideoBars();
+    buildStoryBars();
 
     storiesTrack.addEventListener('click', (event) => {
         const btn = event.target.closest('.story__btn');
         if (!btn) return;
 
-        playVideoAt(storyButtons.indexOf(btn));
+        openStoryAt(storyButtons.indexOf(btn));
     });
 }
 
-if (videoPrevBtn) videoPrevBtn.addEventListener('click', () => goToVideo(-1));
-if (videoNextBtn) videoNextBtn.addEventListener('click', () => goToVideo(1));
-if (videoModalClose) videoModalClose.addEventListener('click', closeVideoModal);
+if (videoModalPlayer) {
+    videoModalPlayer.addEventListener('click', toggleStoryPause);
+}
+
+if (videoPrevBtn) videoPrevBtn.addEventListener('click', () => goToStory(-1));
+if (videoNextBtn) videoNextBtn.addEventListener('click', () => goToStory(1));
+if (videoModalClose) videoModalClose.addEventListener('click', closeStoryModal);
 
 if (videoModal) {
     videoModal.addEventListener('click', (event) => {
-        if (event.target === videoModal) closeVideoModal();
+        if (event.target === videoModal) closeStoryModal();
     });
 }
 
 document.addEventListener('keydown', (e) => {
     if (!videoModal || !videoModal.classList.contains('active')) return;
 
-    if (e.key === 'Escape') closeVideoModal();
-    if (e.key === 'ArrowRight') goToVideo(1);
-    if (e.key === 'ArrowLeft') goToVideo(-1);
+    if (e.key === 'Escape') closeStoryModal();
+    if (e.key === 'ArrowRight') goToStory(1);
+    if (e.key === 'ArrowLeft') goToStory(-1);
 });
 
 /* ---------- Escala do ícone: começa só com a página 100% carregada ---------- */
