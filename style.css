@@ -475,7 +475,7 @@ body.is-loaded .topbar__perfil img {
 .video-modal__box {
     position: relative;
     /* ocupa pouco mais da metade da tela */
-    height: 54vh;
+    height: 60vh;
     width: auto;
     max-width: 90vw;
     max-height: 620px;
@@ -576,6 +576,111 @@ body.is-loaded .topbar__perfil img {
 .video-modal__mute { right: 12px; }
 .video-modal__expand { left: 12px; }
 
+/* ---------- Fim dos stories do artista ---------- */
+.video-modal__end {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 20px;
+    background: rgba(0, 0, 0, .82);
+    backdrop-filter: blur(6px);
+    text-align: center;
+}
+
+.video-modal.is-end .video-modal__end { display: flex; }
+
+.video-modal__end-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, .65);
+}
+
+.video-modal__end-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--white);
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Foto do próximo artista com o cronômetro em volta */
+.video-modal__end-ring {
+    position: relative;
+    display: block;
+    width: 96px;
+    height: 96px;
+    transition: transform .2s ease;
+}
+
+.video-modal__end-timer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg); /* começa no topo */
+}
+
+.video-modal__end-timer circle {
+    fill: none;
+    stroke-width: 5;
+}
+
+.video-modal__end-track { stroke: rgba(255, 255, 255, .18); }
+
+.video-modal__end-run {
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-dasharray: 289;  /* 2 * PI * 46 */
+    stroke-dashoffset: 0;
+}
+
+/* A contagem só roda com o cartão na tela */
+.video-modal.is-end .video-modal__end-run {
+    animation: end-countdown 5s linear forwards;
+}
+
+@keyframes end-countdown {
+    from { stroke-dashoffset: 0; }
+    to   { stroke-dashoffset: 289; }
+}
+
+.video-modal__end-cover {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #000;
+}
+
+.video-modal__end-btn:hover .video-modal__end-ring,
+.video-modal__end-btn:active .video-modal__end-ring {
+    transform: scale(1.06);
+}
+
+.video-modal__end-name {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.video-modal__end-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, .55);
+}
+
 /* Story de imagem não tem som: esconde o mute */
 .video-modal.is-image .video-modal__mute {
     opacity: 0;
@@ -672,7 +777,7 @@ body.is-loaded .topbar__perfil img {
 .popup-box {
     position: relative;
     /* ocupa pouco mais da metade da tela */
-    height: 54vh;
+    height: 60vh;
     width: auto;
     max-width: 90vw;
     max-height: 620px;
@@ -934,7 +1039,7 @@ body.is-loaded .topbar__perfil img {
     .story__label { font-size: 12px; }
 
     .video-modal__box,
-    .popup-box { height: 54vh; }
+    .popup-box { height: 60vh; }
 
     .video-modal__close { top: -44px; }
 

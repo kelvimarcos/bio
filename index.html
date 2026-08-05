@@ -30,7 +30,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
     <link rel="manifest" href="favicon_io/site.webmanifest">
-    <link rel="stylesheet" href="style.css?v=34">
+    <link rel="stylesheet" href="style.css?v=36">
 </head>
 
 <body>
@@ -59,6 +59,27 @@
             <button class="video-modal__close" id="video-modal-close" aria-label="Fechar">&#x2715;</button>
             <button class="video-modal__expand" id="video-modal-expand" aria-label="Tela cheia">&#9974;</button>
             <button class="video-modal__mute" id="video-modal-mute" aria-label="Silenciar">🔊</button>
+
+            <!-- Fim dos stories do artista: convite para o próximo -->
+            <div class="video-modal__end" id="video-modal-end">
+                <p class="video-modal__end-title">Acabou por aqui</p>
+
+                <button class="video-modal__end-btn" id="video-modal-next-group" type="button">
+                    <span class="video-modal__end-ring">
+                        <svg class="video-modal__end-timer" id="video-modal-timer" viewBox="0 0 100 100"
+                            aria-hidden="true">
+                            <circle class="video-modal__end-track" cx="50" cy="50" r="46" />
+                            <circle class="video-modal__end-run" cx="50" cy="50" r="46" />
+                        </svg>
+                        <img class="video-modal__end-cover" id="video-modal-end-cover" alt="">
+                    </span>
+                    <span class="video-modal__end-name" id="video-modal-end-name"></span>
+                </button>
+
+                <p class="video-modal__end-hint">
+                    Fechando em <span id="video-modal-count">5</span>s
+                </p>
+            </div>
         </div>
     </div>
 
@@ -147,15 +168,19 @@
         <!-- /.screen -->
 
         <!--
-            Stories "Passou por Aqui".
+            Stories "Passou por aqui".
 
-            Em cada botão:
-              data-type="video" + data-src="URL do .mp4"      -> dura o tempo do vídeo
-              data-type="image" + data-src="img/arquivo.webp" -> dura 10s
+            Cada bolinha é um artista com seus próprios arquivos, listados em
+            data-items e separados por barra vertical:
 
-            O data-src aceita caminho local (img/foto.webp) ou link externo
-            (https://cdn.seusite.com/story1.mp4). Para vídeo precisa ser o arquivo
-            .mp4 direto, não uma página do YouTube.
+                data-items="video:URL.mp4 | image:img/foto.webp | video:URL2.mp4"
+
+              video:  dura o tempo do próprio arquivo
+              image:  dura 10s
+
+            O caminho aceita arquivo local (img/foto.webp) ou link externo
+            (https://cdn.seusite.com/story1.mp4). Para vídeo precisa ser o .mp4
+            direto, não uma página do YouTube.
 
             A capa da bolinha é a <img class="story__cover">, trocada à parte.
         -->
@@ -164,8 +189,9 @@
 
             <ul class="stories__track">
                 <li class="story">
-                    <button class="story__btn" type="button" data-type="video" data-src="video/video8.mp4"
-                        aria-label="Ver story de Carlinhos Maia">
+                    <button class="story__btn" type="button"
+                        data-items="video:video/video8.mp4 | video:video/video3.mp4 | image:img/foto1.webp | image:img/pc.webp"
+                        aria-label="Ver stories de Carlinhos Maia">
                         <span class="story__ring">
                             <img class="story__cover" src="img/foto1.webp" alt="" loading="lazy">
                         </span>
@@ -173,8 +199,9 @@
                     </button>
                 </li>
                 <li class="story">
-                    <button class="story__btn" type="button" data-type="image" data-src="img/foto1.webp"
-                        aria-label="Ver story de Nathanzinho Lima">
+                    <button class="story__btn" type="button"
+                        data-items="image:img/foto1.webp | video:video/video3.mp4"
+                        aria-label="Ver stories de Nathanzinho Lima">
                         <span class="story__ring">
                             <img class="story__cover" src="img/foto1.webp" alt="" loading="lazy">
                         </span>
@@ -182,8 +209,9 @@
                     </button>
                 </li>
                 <li class="story">
-                    <button class="story__btn" type="button" data-type="video" data-src="video/video3.mp4"
-                        aria-label="Ver story de Lucas Guimarães">
+                    <button class="story__btn" type="button"
+                        data-items="video:video/video3.mp4 | image:img/pc.webp | image:img/foto1.webp"
+                        aria-label="Ver stories de Lucas Guimarães">
                         <span class="story__ring">
                             <img class="story__cover" src="img/foto1.webp" alt="" loading="lazy">
                         </span>
@@ -191,8 +219,9 @@
                     </button>
                 </li>
                 <li class="story">
-                    <button class="story__btn" type="button" data-type="image" data-src="img/pc.webp"
-                        aria-label="Ver story de Nuzio">
+                    <button class="story__btn" type="button"
+                        data-items="image:img/pc.webp"
+                        aria-label="Ver stories de Nuzio">
                         <span class="story__ring">
                             <img class="story__cover" src="img/foto1.webp" alt="" loading="lazy">
                         </span>
@@ -200,8 +229,9 @@
                     </button>
                 </li>
                 <li class="story">
-                    <button class="story__btn" type="button" data-type="image" data-src="img/foto1.webp"
-                        aria-label="Ver story de Luciano Camargo">
+                    <button class="story__btn" type="button"
+                        data-items="image:img/foto1.webp | video:video/video8.mp4"
+                        aria-label="Ver stories de Luciano Camargo">
                         <span class="story__ring">
                             <img class="story__cover" src="img/foto1.webp" alt="" loading="lazy">
                         </span>
@@ -218,7 +248,7 @@
 
     </main>
 
-    <script defer src="script.js?v=34"></script>
+    <script defer src="script.js?v=36"></script>
 </body>
 
 </html>

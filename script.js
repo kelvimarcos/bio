@@ -264,7 +264,10 @@ if (shareBtn) {
     });
 }
 
-/* ---------- Stories "Passou por aqui" ---------- */
+/* ---------- Stories "Passou por aqui" ----------
+   Cada bolinha é um artista independente, com sua própria lista de arquivos.
+   Ao terminar os arquivos de um artista aparece o convite para o próximo;
+   sem clique, o popup fecha sozinho.                                        */
 const storiesTrack = document.querySelector('.stories__track');
 const storyButtons = Array.from(document.querySelectorAll('.story__btn'));
 const videoModal = document.getElementById('video-modal');
@@ -274,23 +277,53 @@ const videoModalBars = document.getElementById('video-modal-bars');
 const videoModalBox = videoModal ? videoModal.querySelector('.video-modal__box') : null;
 const videoModalMute = document.getElementById('video-modal-mute');
 const videoModalExpand = document.getElementById('video-modal-expand');
-
-let storyMuted = false;
+const videoModalEndBtn = document.getElementById('video-modal-next-group');
+const videoModalEndCover = document.getElementById('video-modal-end-cover');
+const videoModalEndName = document.getElementById('video-modal-end-name');
+const videoModalCount = document.getElementById('video-modal-count');
 
 const STORY_IMAGE_DURATION = 10000; // imagem fica 10s; vídeo usa a própria duração
+const STORY_END_COUNTDOWN = 5;      // segundos até fechar no fim de cada artista
 
-let storyIndex = -1;
+// Monta a lista de artistas a partir do data-items de cada bolinha
+const storyGroups = storyButtons.map((btn) => ({
+    nome: (btn.querySelector('.story__label') || {}).textContent || '',
+    capa: (btn.querySelector('.story__cover') || {}).src || '',
+    itens: (btn.dataset.items || '')
+        .split('|')
+        .map((parte) => parte.trim())
+        .filter(Boolean)
+        .map((parte) => {
+            const corte = parte.indexOf(':');
+            return {
+                tipo: parte.slice(0, corte).trim(),
+                src: parte.slice(corte + 1).trim()
+            };
+        })
+        .filter((item) => item.src)
+}));
+
+let groupIndex = -1;        // artista atual
+let itemIndex = 0;          // arquivo atual dentro do artista
 let storyMedia = null;      // <img> ou <video> em exibição
 let storyDuration = STORY_IMAGE_DURATION;
-let storyElapsed = 0;       // ms já corridos do story atual
+let storyElapsed = 0;
 let storyLastTick = 0;
 let storyRaf = null;
 let storyPaused = false;
+let storyMuted = false;
+let endTimer = null;
+
+function currentGroup() {
+    return storyGroups[groupIndex] || null;
+}
 
 function buildStoryBars() {
     if (!videoModalBars) return;
 
-    videoModalBars.innerHTML = storyButtons
+    const total = currentGroup() ? currentGroup().itens.length : 0;
+
+    videoModalBars.innerHTML = Array.from({ length: total })
         .map(() => '<span class="video-modal__bar"><span class="video-modal__fill"></span></span>')
         .join('');
 }
@@ -303,8 +336,8 @@ function paintStoryBars() {
         : 0;
 
     videoModalBars.querySelectorAll('.video-modal__fill').forEach((fill, index) => {
-        if (index < storyIndex) fill.style.width = '100%';
-        else if (index === storyIndex) fill.style.width = `${percent}%`;
+        if (index < itemIndex) fill.style.width = '100%';
+        else if (index === itemIndex) fill.style.width = `${percent}%`;
         else fill.style.width = '0%';
     });
 }
@@ -335,7 +368,7 @@ function storyLoop(now) {
     storyLastTick = now;
     paintStoryBars();
 
-    if (storyElapsed >= storyDuration) goToStory(1);
+    if (storyElapsed >= storyDuration) goToItem(1);
 }
 
 function startStoryLoop() {
@@ -355,112 +388,24 @@ function clearStoryMedia() {
     storyMedia = null;
 }
 
+function clearEndCard() {
+    if (endTimer) clearInterval(endTimer);
+    endTimer = null;
+    if (videoModal) videoModal.classList.remove('is-end');
+}
+
 function closeStoryModal() {
     if (!videoModal) return;
 
     stopStoryLoop();
     clearStoryMedia();
-    videoModal.classList.remove('active', 'is-paused');
-    storyIndex = -1;
+    clearEndCard();
+    videoModal.classList.remove('active', 'is-paused', 'is-image');
+    groupIndex = -1;
+    itemIndex = 0;
     storyElapsed = 0;
     storyPaused = false;
     document.body.style.overflow = '';
-}
-
-function openStoryAt(index) {
-    if (!videoModal || index < 0 || index >= storyButtons.length) return;
-
-    const btn = storyButtons[index];
-    const src = btn.dataset.src;
-    if (!src) return;
-
-    stopStoryLoop();
-    clearStoryMedia();
-
-    storyIndex = index;
-    storyElapsed = 0;
-    storyPaused = false;
-    videoModal.classList.remove('is-paused');
-
-    const isVideo = btn.dataset.type === 'video';
-    videoModal.classList.toggle('is-image', !isVideo);
-
-    if (isVideo) {
-        const video = document.createElement('video');
-        video.src = src;
-        video.playsInline = true;
-        video.autoplay = true;
-        video.preload = 'auto';
-        video.muted = storyMuted;
-        video.setAttribute('playsinline', '');
-
-        video.addEventListener('loadedmetadata', () => {
-            storyDuration = (video.duration && Number.isFinite(video.duration))
-                ? video.duration * 1000
-                : STORY_IMAGE_DURATION;
-        });
-
-        video.addEventListener('ended', () => goToStory(1));
-
-        video.play().catch(() => {
-            // navegador bloqueou o som: repete mudo
-            setStoryMuted(true);
-            video.play().catch(() => {});
-        });
-
-        storyDuration = STORY_IMAGE_DURATION; // até a duração real chegar
-        storyMedia = video;
-        videoModalPlayer.appendChild(video);
-    } else {
-        const img = document.createElement('img');
-        img.src = src;
-        img.alt = '';
-
-        storyDuration = STORY_IMAGE_DURATION;
-        storyMedia = img;
-        videoModalPlayer.appendChild(img);
-    }
-
-    videoModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-
-    paintStoryBars();
-    startStoryLoop();
-}
-
-function goToStory(step) {
-    const next = storyIndex + step;
-
-    if (next < 0) return;
-
-    // passou do último: fecha, como nos stories
-    if (next >= storyButtons.length) {
-        closeStoryModal();
-        return;
-    }
-
-    openStoryAt(next);
-}
-
-function toggleStoryPause() {
-    storyPaused = !storyPaused;
-    videoModal.classList.toggle('is-paused', storyPaused);
-
-    if (!storyMedia || storyMedia.tagName !== 'VIDEO') return;
-
-    if (storyPaused) storyMedia.pause();
-    else storyMedia.play().catch(() => {});
-}
-
-if (storiesTrack) {
-    buildStoryBars();
-
-    storiesTrack.addEventListener('click', (event) => {
-        const btn = event.target.closest('.story__btn');
-        if (!btn) return;
-
-        openStoryAt(storyButtons.indexOf(btn));
-    });
 }
 
 // Liga/desliga o som do story
@@ -473,6 +418,133 @@ function setStoryMuted(muted) {
         videoModalMute.textContent = muted ? '🔇' : '🔊';
         videoModalMute.setAttribute('aria-label', muted ? 'Ativar som' : 'Silenciar');
     }
+}
+
+function showItem(index) {
+    const grupo = currentGroup();
+    if (!grupo || !grupo.itens[index]) return;
+
+    const item = grupo.itens[index];
+
+    stopStoryLoop();
+    clearStoryMedia();
+    clearEndCard();
+
+    itemIndex = index;
+    storyElapsed = 0;
+    storyPaused = false;
+    videoModal.classList.remove('is-paused');
+
+    const isVideo = item.tipo === 'video';
+    videoModal.classList.toggle('is-image', !isVideo);
+
+    if (isVideo) {
+        const video = document.createElement('video');
+        video.src = item.src;
+        video.playsInline = true;
+        video.autoplay = true;
+        video.preload = 'auto';
+        video.muted = storyMuted;
+        video.setAttribute('playsinline', '');
+
+        video.addEventListener('loadedmetadata', () => {
+            storyDuration = (video.duration && Number.isFinite(video.duration))
+                ? video.duration * 1000
+                : STORY_IMAGE_DURATION;
+        });
+
+        video.addEventListener('ended', () => goToItem(1));
+
+        video.play().catch(() => {
+            // navegador bloqueou o som: repete mudo
+            setStoryMuted(true);
+            video.play().catch(() => {});
+        });
+
+        storyDuration = STORY_IMAGE_DURATION; // até a duração real chegar
+        storyMedia = video;
+        videoModalPlayer.appendChild(video);
+    } else {
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = '';
+
+        storyDuration = STORY_IMAGE_DURATION;
+        storyMedia = img;
+        videoModalPlayer.appendChild(img);
+    }
+
+    paintStoryBars();
+    startStoryLoop();
+}
+
+function openGroup(index) {
+    if (!videoModal || !storyGroups[index] || !storyGroups[index].itens.length) return;
+
+    groupIndex = index;
+    buildStoryBars();
+
+    videoModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    showItem(0);
+}
+
+// Fim do artista: convida para o próximo e fecha se ninguém clicar
+function showEndCard() {
+    const proximo = storyGroups[groupIndex + 1];
+
+    stopStoryLoop();
+
+    if (storyMedia && storyMedia.tagName === 'VIDEO') storyMedia.pause();
+
+    // Era o último artista: fecha direto
+    if (!proximo || !proximo.itens.length) {
+        closeStoryModal();
+        return;
+    }
+
+    if (videoModalEndCover) videoModalEndCover.src = proximo.capa;
+    if (videoModalEndName) videoModalEndName.textContent = proximo.nome;
+
+    videoModal.classList.add('is-end');
+
+    let restante = STORY_END_COUNTDOWN;
+    if (videoModalCount) videoModalCount.textContent = restante;
+
+    if (endTimer) clearInterval(endTimer);
+    endTimer = setInterval(() => {
+        restante -= 1;
+        if (videoModalCount) videoModalCount.textContent = Math.max(0, restante);
+
+        if (restante <= 0) closeStoryModal();
+    }, 1000);
+}
+
+// Navega apenas dentro do artista atual
+function goToItem(step) {
+    const grupo = currentGroup();
+    if (!grupo) return;
+
+    const proximo = itemIndex + step;
+
+    if (proximo < 0) return;                       // já está no primeiro
+    if (proximo >= grupo.itens.length) {           // acabou o artista
+        showEndCard();
+        return;
+    }
+
+    showItem(proximo);
+}
+
+function toggleStoryPause() {
+    storyPaused = !storyPaused;
+    videoModal.classList.toggle('is-paused', storyPaused);
+
+    if (!storyMedia || storyMedia.tagName !== 'VIDEO') return;
+
+    if (storyPaused) storyMedia.pause();
+    else storyMedia.play().catch(() => {});
 }
 
 // Tela cheia do popup (com alternativa para o iOS, que só aceita no vídeo)
@@ -491,23 +563,41 @@ function toggleFullscreen(element, media) {
     }
 }
 
+if (storiesTrack) {
+    storiesTrack.addEventListener('click', (event) => {
+        const btn = event.target.closest('.story__btn');
+        if (!btn) return;
+
+        openGroup(storyButtons.indexOf(btn));
+    });
+}
+
 /* Toque na tela: terço esquerdo volta, terço direito avança, meio pausa */
 if (videoModalPlayer) {
     videoModalPlayer.addEventListener('click', (event) => {
+        if (videoModal.classList.contains('is-end')) return;
+
         const rect = videoModalPlayer.getBoundingClientRect();
         const x = event.clientX - rect.left;
 
         if (x < rect.width * 0.33) {
-            goToStory(-1);
+            goToItem(-1);
             return;
         }
 
         if (x > rect.width * 0.67) {
-            goToStory(1);
+            goToItem(1);
             return;
         }
 
         toggleStoryPause();
+    });
+}
+
+if (videoModalEndBtn) {
+    videoModalEndBtn.addEventListener('click', () => {
+        clearEndCard();
+        openGroup(groupIndex + 1);
     });
 }
 
@@ -537,8 +627,8 @@ document.addEventListener('keydown', (e) => {
     if (!videoModal || !videoModal.classList.contains('active')) return;
 
     if (e.key === 'Escape') closeStoryModal();
-    if (e.key === 'ArrowRight') goToStory(1);
-    if (e.key === 'ArrowLeft') goToStory(-1);
+    if (e.key === 'ArrowRight') goToItem(1);
+    if (e.key === 'ArrowLeft') goToItem(-1);
 });
 
 /* ---------- Escala do ícone: começa só com a página 100% carregada ---------- */
