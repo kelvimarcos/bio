@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics - G-Q7207GW1HK -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q7207GW1HK"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-Q7207GW1HK');
+    </script>
+
+    <!-- Microsoft Clarity - tfwazt7wte -->
+    <script type="text/javascript">
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "tfwazt7wte");
+    </script>
+    <title>Don Diego Teixeira</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="favicon_io/site.webmanifest">
+    <link rel="stylesheet" href="style.css?v=18">
+</head>
+
+<body>
+
+    <!-- Popup de vídeo -->
+    <div class="popup-overlay" id="video-popup" role="dialog" aria-modal="true" aria-label="Vídeo">
+        <div class="popup-box">
+            <div class="story-progress" id="story-progress" aria-hidden="true"></div>
+            <button class="popup-close" id="close-popup" aria-label="Fechar">&#x2715;</button>
+            <button class="popup-mute" id="mute-btn" aria-label="Silenciar">🔊</button>
+            <video class="popup-video" src="video/video8.mp4" playsinline muted preload="metadata"
+                aria-label="Vídeo do Don Diego Style">
+                Seu navegador não suporta reprodução de vídeo.
+            </video>
+
+        </div>
+    </div>
+
+    <!-- Popup do vídeo do YouTube (stories) -->
+    <div class="video-modal" id="video-modal" role="dialog" aria-modal="true" aria-label="Vídeo">
+        <div class="video-modal__box">
+            <div class="video-modal__bars" id="video-modal-bars" aria-hidden="true"></div>
+            <button class="video-modal__close" id="video-modal-close" aria-label="Fechar">&#x2715;</button>
+
+            <button class="video-modal__nav video-modal__nav--prev" id="video-prev"
+                aria-label="Vídeo anterior">&#10094;</button>
+            <div class="video-modal__player" id="video-modal-player"></div>
+            <button class="video-modal__nav video-modal__nav--next" id="video-next"
+                aria-label="Próximo vídeo">&#10095;</button>
+        </div>
+    </div>
+
+    <main class="container">
+
+        <!-- Primeira tela: foto + botões (no desktop ocupa 100vh) -->
+        <div class="screen">
+
+        <header class="hero">
+
+            <!-- Topbar: perfil 2 esquerda | compartilhar direita -->
+            <div class="topbar">
+                <div class="topbar__left">
+                    <button class="topbar__perfil" id="open-popup" aria-label="Abrir vídeo">
+                        <img src="img/mensagemIcon.png" alt="Conheça o Don Diego">
+                    </button>
+
+                    <button class="chat-bubble" id="chat-bubble" type="button" aria-label="Abrir vídeo">
+                        <span class="chat-bubble__dots" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </span>
+                        <span class="chat-bubble__text">Opa!</span>
+                    </button>
+                </div>
+                <button class="topbar__share" id="share-btn" aria-label="Compartilhar">
+                    <img src="img/compartilhar.png" alt="Compartilhar">
+                </button>
+            </div>
+
+            <picture>
+                <source media="(min-width: 769px)" srcset="img/pc.webp">
+                <img class="hero__photo" src="img/foto1.webp" alt="Don Diego">
+            </picture>
+
+            <h1 class="hero__welcome">
+                Bem-vindo(a)<br> <span class="ajudar">os links irão ajudar </span>
+                <span class="arrow-down">&#42780;</span>
+            </h1>
+
+        </header>
+
+        <section class="panel" aria-label="Links">
+            <div class="cards">
+                <a class="link"
+                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    target="_blank" rel="noopener noreferrer">
+                    <img src="img/img1.webp" alt="imagem de um botão">
+                </a>
+        
+                <a class="link"
+                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    target="_blank" rel="noopener noreferrer">
+                    <img src="img/img2.webp" alt="imagem de um botão">
+                </a>
+        
+                <a class="link"
+                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    target="_blank" rel="noopener noreferrer">
+                    <img src="img/img3.webp" alt="imagem de um botão">
+                </a>
+        
+                <a class="link"
+                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    target="_blank" rel="noopener noreferrer">
+                    <img src="img/img4.webp" alt="imagem de um botão">
+                </a>
+        
+                <a class="link"
+                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    target="_blank" rel="noopener noreferrer">
+                    <img src="img/img5.webp" alt="imagem de um botão">
+                </a>
+        
+                <a class="link"
+                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    target="_blank" rel="noopener noreferrer">
+                    <img src="img/img6.webp" alt="imagem de um botão">
+                </a>
+        
+            </div>
+
+
+        </section>
+
+        </div>
+        <!-- /.screen -->
+
+        <!--
+            Vídeos em formato "stories".
+            Para trocar a capa de cada bolinha, basta mudar o src da imagem
+            (ex.: src="img/capa1.webp"). Para trocar o vídeo, mude o data-video.
+        -->
+        <section class="stories" aria-label="Vídeos">
+            <h2 class="stories__title">Vídeos</h2>
+
+            <ul class="stories__track">
+                <li class="story">
+                    <button class="story__btn" type="button" data-video="8VLFd2cEIpg" aria-label="Assistir vídeo 1">
+                        <span class="story__ring">
+                            <img class="story__cover" src="https://i.ytimg.com/vi/8VLFd2cEIpg/hqdefault.jpg" alt=""
+                                loading="lazy">
+                        </span>
+                        <span class="story__label">Carlinhos Maia</span>
+                    </button>
+                </li>
+                <li class="story">
+                    <button class="story__btn" type="button" data-video="8VLFd2cEIpg" aria-label="Assistir vídeo 2">
+                        <span class="story__ring">
+                            <img class="story__cover" src="https://i.ytimg.com/vi/8VLFd2cEIpg/hqdefault.jpg" alt=""
+                                loading="lazy">
+                        </span>
+                        <span class="story__label">Nathanzinho Lima</span>
+                    </button>
+                </li>
+                <li class="story">
+                    <button class="story__btn" type="button" data-video="8VLFd2cEIpg" aria-label="Assistir vídeo 3">
+                        <span class="story__ring">
+                            <img class="story__cover" src="https://i.ytimg.com/vi/8VLFd2cEIpg/hqdefault.jpg" alt=""
+                                loading="lazy">
+                        </span>
+                        <span class="story__label">Lucas Guimarães</span>
+                    </button>
+                </li>
+                <li class="story">
+                    <button class="story__btn" type="button" data-video="8VLFd2cEIpg" aria-label="Assistir vídeo 4">
+                        <span class="story__ring">
+                            <img class="story__cover" src="https://i.ytimg.com/vi/8VLFd2cEIpg/hqdefault.jpg" alt=""
+                                loading="lazy">
+                        </span>
+                        <span class="story__label">Nuzio</span>
+                    </button>
+                </li>
+                <li class="story">
+                    <button class="story__btn" type="button" data-video="8VLFd2cEIpg" aria-label="Assistir vídeo 5">
+                        <span class="story__ring">
+                            <img class="story__cover" src="https://i.ytimg.com/vi/8VLFd2cEIpg/hqdefault.jpg" alt=""
+                                loading="lazy">
+                        </span>
+                        <span class="story__label">Luciano Camargo</span>
+                    </button>
+                </li>
+            </ul>
+        </section>
+
+        <section class="footer">
+            <p class="footer__text">©2026 Don Diego Teixeira</p>
+        </section>
+
+
+    </main>
+
+    <script defer src="script.js?v=18"></script>
+</body>
+
+</html>
