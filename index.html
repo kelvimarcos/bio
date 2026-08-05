@@ -30,7 +30,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
     <link rel="manifest" href="favicon_io/site.webmanifest">
-    <link rel="stylesheet" href="style.css?v=30">
+    <link rel="stylesheet" href="style.css?v=34">
 </head>
 
 <body>
@@ -40,6 +40,7 @@
         <div class="popup-box">
             <div class="story-progress" id="story-progress" aria-hidden="true"></div>
             <button class="popup-close" id="close-popup" aria-label="Fechar">&#x2715;</button>
+            <button class="popup-expand" id="popup-expand" aria-label="Tela cheia">&#9974;</button>
             <button class="popup-mute" id="mute-btn" aria-label="Silenciar">🔊</button>
             <video class="popup-video" src="video/video8.mp4" playsinline muted preload="metadata"
                 aria-label="Vídeo do Don Diego Style">
@@ -56,11 +57,8 @@
 
             <div class="video-modal__bars" id="video-modal-bars" aria-hidden="true"></div>
             <button class="video-modal__close" id="video-modal-close" aria-label="Fechar">&#x2715;</button>
-
-            <button class="video-modal__nav video-modal__nav--prev" id="video-prev"
-                aria-label="Story anterior">&#10094;</button>
-            <button class="video-modal__nav video-modal__nav--next" id="video-next"
-                aria-label="Próximo story">&#10095;</button>
+            <button class="video-modal__expand" id="video-modal-expand" aria-label="Tela cheia">&#9974;</button>
+            <button class="video-modal__mute" id="video-modal-mute" aria-label="Silenciar">🔊</button>
         </div>
     </div>
 
@@ -153,7 +151,7 @@
 
             Em cada botão:
               data-type="video" + data-src="URL do .mp4"      -> dura o tempo do vídeo
-              data-type="image" + data-src="img/arquivo.webp" -> dura 15s
+              data-type="image" + data-src="img/arquivo.webp" -> dura 10s
 
             O data-src aceita caminho local (img/foto.webp) ou link externo
             (https://cdn.seusite.com/story1.mp4). Para vídeo precisa ser o arquivo
@@ -220,7 +218,7 @@
 
     </main>
 
-    <script defer src="script.js?v=30"></script>
+    <script defer src="script.js?v=34"></script>
 </body>
 
 </html>

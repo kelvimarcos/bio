@@ -4,6 +4,7 @@ const video = popup ? popup.querySelector('.popup-video') : null;
 const openBtn = document.getElementById('open-popup');
 const closeBtn = document.getElementById('close-popup');
 const muteBtn = document.getElementById('mute-btn');
+const expandBtn = document.getElementById('popup-expand');
 const chatBubble = document.getElementById('chat-bubble');
 const progressContainer = document.getElementById('story-progress');
 const shareBtn = document.getElementById('share-btn');
@@ -174,6 +175,13 @@ function closePopup() {
 if (openBtn) openBtn.addEventListener('click', openPopup);
 if (closeBtn) closeBtn.addEventListener('click', closePopup);
 
+if (expandBtn) {
+    expandBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        toggleFullscreen(popupBox, video);
+    });
+}
+
 if (muteBtn && video) {
     muteBtn.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -186,7 +194,9 @@ if (muteBtn && video) {
 
 if (popupBox) {
     popupBox.addEventListener('click', (event) => {
-        if (event.target.closest('.popup-close') || event.target.closest('.popup-mute')) {
+        if (event.target.closest('.popup-close') ||
+            event.target.closest('.popup-mute') ||
+            event.target.closest('.popup-expand')) {
             return;
         }
 
@@ -261,10 +271,13 @@ const videoModal = document.getElementById('video-modal');
 const videoModalPlayer = document.getElementById('video-modal-player');
 const videoModalClose = document.getElementById('video-modal-close');
 const videoModalBars = document.getElementById('video-modal-bars');
-const videoPrevBtn = document.getElementById('video-prev');
-const videoNextBtn = document.getElementById('video-next');
+const videoModalBox = videoModal ? videoModal.querySelector('.video-modal__box') : null;
+const videoModalMute = document.getElementById('video-modal-mute');
+const videoModalExpand = document.getElementById('video-modal-expand');
 
-const STORY_IMAGE_DURATION = 15000; // imagem fica 15s; vídeo usa a própria duração
+let storyMuted = false;
+
+const STORY_IMAGE_DURATION = 10000; // imagem fica 10s; vídeo usa a própria duração
 
 let storyIndex = -1;
 let storyMedia = null;      // <img> ou <video> em exibição
@@ -294,9 +307,6 @@ function paintStoryBars() {
         else if (index === storyIndex) fill.style.width = `${percent}%`;
         else fill.style.width = '0%';
     });
-
-    if (videoPrevBtn) videoPrevBtn.disabled = storyIndex <= 0;
-    if (videoNextBtn) videoNextBtn.disabled = storyIndex >= storyButtons.length - 1;
 }
 
 function stopStoryLoop() {
@@ -372,15 +382,18 @@ function openStoryAt(index) {
     storyPaused = false;
     videoModal.classList.remove('is-paused');
 
-    if (btn.dataset.type === 'video') {
+    const isVideo = btn.dataset.type === 'video';
+    videoModal.classList.toggle('is-image', !isVideo);
+
+    if (isVideo) {
         const video = document.createElement('video');
         video.src = src;
         video.playsInline = true;
         video.autoplay = true;
         video.preload = 'auto';
+        video.muted = storyMuted;
         video.setAttribute('playsinline', '');
 
-        // Só um vídeo por vez e sem estourar o som de cara
         video.addEventListener('loadedmetadata', () => {
             storyDuration = (video.duration && Number.isFinite(video.duration))
                 ? video.duration * 1000
@@ -391,7 +404,7 @@ function openStoryAt(index) {
 
         video.play().catch(() => {
             // navegador bloqueou o som: repete mudo
-            video.muted = true;
+            setStoryMuted(true);
             video.play().catch(() => {});
         });
 
@@ -450,12 +463,68 @@ if (storiesTrack) {
     });
 }
 
-if (videoModalPlayer) {
-    videoModalPlayer.addEventListener('click', toggleStoryPause);
+// Liga/desliga o som do story
+function setStoryMuted(muted) {
+    storyMuted = muted;
+
+    if (storyMedia && storyMedia.tagName === 'VIDEO') storyMedia.muted = muted;
+
+    if (videoModalMute) {
+        videoModalMute.textContent = muted ? '🔇' : '🔊';
+        videoModalMute.setAttribute('aria-label', muted ? 'Ativar som' : 'Silenciar');
+    }
 }
 
-if (videoPrevBtn) videoPrevBtn.addEventListener('click', () => goToStory(-1));
-if (videoNextBtn) videoNextBtn.addEventListener('click', () => goToStory(1));
+// Tela cheia do popup (com alternativa para o iOS, que só aceita no vídeo)
+function toggleFullscreen(element, media) {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        return;
+    }
+
+    if (element.requestFullscreen) {
+        element.requestFullscreen().catch(() => {});
+    } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+    } else if (media && media.webkitEnterFullscreen) {
+        media.webkitEnterFullscreen();
+    }
+}
+
+/* Toque na tela: terço esquerdo volta, terço direito avança, meio pausa */
+if (videoModalPlayer) {
+    videoModalPlayer.addEventListener('click', (event) => {
+        const rect = videoModalPlayer.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+
+        if (x < rect.width * 0.33) {
+            goToStory(-1);
+            return;
+        }
+
+        if (x > rect.width * 0.67) {
+            goToStory(1);
+            return;
+        }
+
+        toggleStoryPause();
+    });
+}
+
+if (videoModalMute) {
+    videoModalMute.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setStoryMuted(!storyMuted);
+    });
+}
+
+if (videoModalExpand) {
+    videoModalExpand.addEventListener('click', (event) => {
+        event.stopPropagation();
+        toggleFullscreen(videoModalBox, storyMedia);
+    });
+}
+
 if (videoModalClose) videoModalClose.addEventListener('click', closeStoryModal);
 
 if (videoModal) {

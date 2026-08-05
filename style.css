@@ -7,8 +7,8 @@
 
 :root {
     --navy:        #0E1424;
-    --panel:       #2c303c;
-    --panel-edge:  #3a3f4d;
+    --panel:       #003C6C;
+    --panel-edge:  #003C6C;
     --ink:         #041336;
     --accent:      #00aeff;
     --white:       #ffffff;
@@ -265,7 +265,7 @@ body.is-loaded .topbar__perfil img {
     margin: -140px auto 0;
     width: 100%;
     background: linear-gradient(180deg, var(--panel) 0%, #262a35 100%);
-    border-radius: 40px;
+    border-radius: 61px; /* = raio do botão (45) + padding do painel (16) */
     border: 1px solid rgba(255, 255, 255, .06);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
     overflow: hidden;
@@ -474,8 +474,11 @@ body.is-loaded .topbar__perfil img {
 
 .video-modal__box {
     position: relative;
-    width: min(90vw, 380px);
-    max-height: min(86vh, 700px);
+    /* ocupa pouco mais da metade da tela */
+    height: 54vh;
+    width: auto;
+    max-width: 90vw;
+    max-height: 620px;
     aspect-ratio: 9 / 16;
     border-radius: 16px;
     overflow: hidden;
@@ -541,18 +544,16 @@ body.is-loaded .topbar__perfil img {
     pointer-events: none;
 }
 
-/* Setas de navegação entre os vídeos */
-.video-modal__nav {
+/* Botões de mute e tela cheia do story */
+.video-modal__mute,
+.video-modal__expand {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 5;
-    width: 36px;
-    height: 36px;
+    bottom: 12px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, .18);
-    background: rgba(0, 0, 0, .45);
-    backdrop-filter: blur(2px);
+    border: none;
+    background: rgba(0, 0, 0, .55);
     color: var(--white);
     font-size: 14px;
     line-height: 1;
@@ -560,15 +561,26 @@ body.is-loaded .topbar__perfil img {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    z-index: 8;
     transition: background .15s ease, opacity .15s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
-.video-modal__nav:hover { background: rgba(0, 0, 0, .7); }
-.video-modal__nav[disabled] { opacity: 0; pointer-events: none; }
+.video-modal__mute:hover,
+.video-modal__expand:hover,
+.video-modal__mute:active,
+.video-modal__expand:active {
+    background: rgba(0, 0, 0, .85);
+}
 
-.video-modal__nav--prev { left: 8px; }
-.video-modal__nav--next { right: 8px; }
+.video-modal__mute { right: 12px; }
+.video-modal__expand { left: 12px; }
+
+/* Story de imagem não tem som: esconde o mute */
+.video-modal.is-image .video-modal__mute {
+    opacity: 0;
+    pointer-events: none;
+}
 
 .video-modal__player iframe {
     display: block;
@@ -659,8 +671,11 @@ body.is-loaded .topbar__perfil img {
 
 .popup-box {
     position: relative;
-    width: min(90vw, 360px);
-    max-height: min(80vh, 640px);
+    /* ocupa pouco mais da metade da tela */
+    height: 54vh;
+    width: auto;
+    max-width: 90vw;
+    max-height: 620px;
     aspect-ratio: 9 / 16;
     background: var(--panel);
     border-radius: 16px;
@@ -734,6 +749,32 @@ body.is-loaded .topbar__perfil img {
     background: rgba(0, 0, 0, .9);
 }
 
+.popup-expand {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(0, 0, 0, .6);
+    border: none;
+    color: var(--white);
+    font-size: 14px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.popup-expand:hover,
+.popup-expand:active {
+    background: rgba(0, 0, 0, .9);
+}
+
 .popup-mute {
     position: absolute;
     bottom: 12px;
@@ -786,12 +827,11 @@ body.is-loaded .topbar__perfil img {
     .topbar__share img { width: 40px; }
     .chat-bubble { font-size: 11.5px; padding: 8px 12px; }
     .cards { padding: 24px 16px 20px; gap: 16px; }
-    .panel { border-radius: 40px; margin-top: -140px; }
+
+    /* Raio concêntrico com os botões: 45px do .link + 16px de padding */
+    .panel { border-radius: 61px; margin-top: -140px; }
+
     .popup-overlay { padding: 14px; }
-    .popup-box {
-        width: min(88vw, 360px);
-        max-height: min(80vh, 640px);
-    }
 }
 
 /* Tablet e desktop (≥768px) */
@@ -893,8 +933,8 @@ body.is-loaded .topbar__perfil img {
     .story__cover { border-color: #1E1E1E; } /* combina com o fundo do desktop */
     .story__label { font-size: 12px; }
 
-    .video-modal__nav--prev { left: 10px; }
-    .video-modal__nav--next { right: 10px; }
+    .video-modal__box,
+    .popup-box { height: 54vh; }
 
     .video-modal__close { top: -44px; }
 
