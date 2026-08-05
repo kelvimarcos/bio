@@ -143,11 +143,11 @@ function openPopup() {
     document.body.style.overflow = 'hidden';
     resetProgressBar();
     updateProgressBar();
-    isMuted = false;
+    isMuted = true; // começa sem som; o usuário libera no botão
     isPaused = false;
     if (muteBtn) {
-        muteBtn.textContent = '🔊';
-        muteBtn.setAttribute('aria-label', 'Silenciar');
+        muteBtn.textContent = '🔇';
+        muteBtn.setAttribute('aria-label', 'Ativar som');
     }
     loadStory(0);
     setTimeout(startStoryProgress, 120);
@@ -163,11 +163,11 @@ function closePopup() {
     video.removeAttribute('src');
     video.load();
     progressElapsed = 0;
-    isMuted = false;
+    isMuted = true;
     isPaused = false;
     if (muteBtn) {
-        muteBtn.textContent = '🔊';
-        muteBtn.setAttribute('aria-label', 'Silenciar');
+        muteBtn.textContent = '🔇';
+        muteBtn.setAttribute('aria-label', 'Ativar som');
     }
     document.body.style.overflow = '';
 }
@@ -360,7 +360,7 @@ let storyElapsed = 0;
 let storyLastTick = 0;
 let storyRaf = null;
 let storyPaused = false;
-let storyMuted = false;
+let storyMuted = true; // começa sem som; o usuário libera no botão
 let endTimer = null;
 
 function currentGroup() {
@@ -532,6 +532,7 @@ function openGroup(index) {
 
     groupIndex = index;
     buildStoryBars();
+    setStoryMuted(storyMuted); // garante o ícone certo ao abrir
 
     videoModal.classList.add('active');
     document.body.style.overflow = 'hidden';
