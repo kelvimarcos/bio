@@ -374,23 +374,29 @@ window.addEventListener('load', () => {
 const chatBubbleText = chatBubble ? chatBubble.querySelector('.chat-bubble__text') : null;
 
 const BUBBLE_START = 400;    // tempo até o balão aparecer (já em "digitando")
-// Tempo que cada mensagem fica na tela, na ordem do BUBBLE_MESSAGES
-const BUBBLE_READ = [1800, 1500, 1800];
 
-// "Digitando" dura conforme o tamanho da mensagem que vem a seguir
+// O \n é a quebra de linha do balão
+const BUBBLE_MESSAGES = [
+    'Oopa! 👋',
+    'Conheça um pouco\nda minha trajetória.',
+    'Clique aqui'
+];
+
+// Quanto tempo o "digitando" roda antes de cada mensagem (mesma ordem acima)
+const BUBBLE_TYPING = [900, 2000, 1000];
+
+// Quanto tempo cada mensagem fica na tela (a última fica fixa)
+const BUBBLE_READ = [1800, 5000, null];
+
+// Sobra para mensagens novas sem tempo definido: calcula pelo tamanho do texto
 const TYPING_PER_CHAR = 45;  // ms por caractere
 const TYPING_MIN = 900;
 const TYPING_MAX = 2400;
 
-// O \n é a quebra de linha do balão
-const BUBBLE_MESSAGES = [
-    'Opa!',
-    'Fico feliz\npor está aqui',
-    'Conheça minha\nhistória'
-];
+function typingTimeFor(index) {
+    if (typeof BUBBLE_TYPING[index] === 'number') return BUBBLE_TYPING[index];
 
-function typingTimeFor(text) {
-    const length = (text || '').replace(/\s+/g, ' ').trim().length;
+    const length = (BUBBLE_MESSAGES[index] || '').replace(/\s+/g, ' ').trim().length;
     return Math.min(TYPING_MAX, Math.max(TYPING_MIN, length * TYPING_PER_CHAR));
 }
 
@@ -432,10 +438,7 @@ function showBubbleMessage(index) {
     scheduleBubble(() => {
         chatBubble.classList.remove('is-message'); // volta pro "digitando"
         setBubbleTyping(true);
-        scheduleBubble(
-            () => showBubbleMessage(index + 1),
-            typingTimeFor(BUBBLE_MESSAGES[index + 1])
-        );
+        scheduleBubble(() => showBubbleMessage(index + 1), typingTimeFor(index + 1));
     }, BUBBLE_READ[index] ?? 1800);
 }
 
@@ -443,7 +446,7 @@ if (chatBubble && chatBubbleText) {
     scheduleBubble(() => {
         chatBubble.classList.add('is-visible'); // entra já em "digitando"
         setBubbleTyping(true);
-        scheduleBubble(() => showBubbleMessage(0), typingTimeFor(BUBBLE_MESSAGES[0]));
+        scheduleBubble(() => showBubbleMessage(0), typingTimeFor(0));
     }, BUBBLE_START);
 
     chatBubble.addEventListener('click', () => {

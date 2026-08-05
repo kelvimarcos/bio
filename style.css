@@ -426,7 +426,9 @@ body.is-loaded .topbar__perfil img {
     height: 100%;
     min-width: 0;
     display: block;
-    object-fit: cover;
+    object-fit: cover;      /* recorta sem distorcer, sempre no centro */
+    object-position: center;
+    aspect-ratio: 1 / 1;
     border-radius: 50%;
     border: 2px solid var(--navy);
     background: #000;
@@ -858,6 +860,7 @@ body.is-loaded .topbar__perfil img {
     /* No desktop as bolinhas têm tamanho fixo (cabem várias na largura) */
     .story { flex: 0 0 88px; }
     .story__ring { width: 84px; height: 84px; aspect-ratio: auto; }
+    .story__cover { border-color: #1E1E1E; } /* combina com o fundo do desktop */
     .story__label { font-size: 12px; }
 
     .video-modal__nav--prev { left: -22px; }
