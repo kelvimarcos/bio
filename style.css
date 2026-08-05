@@ -475,7 +475,7 @@ body.is-loaded .topbar__perfil img {
 .video-modal__box {
     position: relative;
     /* ocupa pouco mais da metade da tela */
-    height: 60vh;
+    height: 70vh;
     width: auto;
     max-width: 90vw;
     max-height: 620px;
@@ -497,6 +497,10 @@ body.is-loaded .topbar__perfil img {
     height: 100%;
     background: #000;
     cursor: pointer;
+    /* segurar não pode selecionar nem abrir menu do sistema */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .video-modal__player img,
@@ -647,7 +651,7 @@ body.is-loaded .topbar__perfil img {
 
 /* A contagem só roda com o cartão na tela */
 .video-modal.is-end .video-modal__end-run {
-    animation: end-countdown 5s linear forwards;
+    animation: end-countdown 10s linear forwards;
 }
 
 @keyframes end-countdown {
@@ -679,6 +683,46 @@ body.is-loaded .topbar__perfil img {
 .video-modal__end-hint {
     font-size: 12px;
     color: rgba(255, 255, 255, .55);
+}
+
+/* Sair / Avançar */
+.video-modal__end-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.video-modal__end-action {
+    min-width: 92px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .25);
+    background: rgba(255, 255, 255, .08);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s ease, transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.video-modal__end-action:hover,
+.video-modal__end-action:active {
+    background: rgba(255, 255, 255, .18);
+    transform: scale(1.04);
+}
+
+.video-modal__end-action--main {
+    background: var(--accent);
+    border-color: transparent;
+    color: #04121f;
+    font-weight: 600;
+}
+
+.video-modal__end-action--main:hover,
+.video-modal__end-action--main:active {
+    background: #38c6ff;
 }
 
 /* Story de imagem não tem som: esconde o mute */
@@ -777,7 +821,7 @@ body.is-loaded .topbar__perfil img {
 .popup-box {
     position: relative;
     /* ocupa pouco mais da metade da tela */
-    height: 60vh;
+    height: 70vh;
     width: auto;
     max-width: 90vw;
     max-height: 620px;
@@ -789,6 +833,9 @@ body.is-loaded .topbar__perfil img {
     transform: scale(.88);
     transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
     cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .story-progress {
@@ -1039,7 +1086,7 @@ body.is-loaded .topbar__perfil img {
     .story__label { font-size: 12px; }
 
     .video-modal__box,
-    .popup-box { height: 60vh; }
+    .popup-box { height: 70vh; }
 
     .video-modal__close { top: -44px; }
 

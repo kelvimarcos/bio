@@ -192,40 +192,87 @@ if (muteBtn && video) {
     });
 }
 
+/* Toque rápido navega; segurar pausa enquanto o dedo estiver na tela */
 if (popupBox) {
-    popupBox.addEventListener('click', (event) => {
-        if (event.target.closest('.popup-close') ||
-            event.target.closest('.popup-mute') ||
-            event.target.closest('.popup-expand')) {
-            return;
+    const POPUP_HOLD_DELAY = 220;
+    let popupHoldTimer = null;
+    let popupHolding = false;
+
+    function ehBotaoDoPopup(target) {
+        return target.closest('.popup-close') ||
+            target.closest('.popup-mute') ||
+            target.closest('.popup-expand');
+    }
+
+    function soltarPopup() {
+        if (popupHoldTimer) clearTimeout(popupHoldTimer);
+        popupHoldTimer = null;
+
+        if (!popupHolding) return false;
+
+        popupHolding = false;
+        if (isPaused) toggleStoryPlayback(); // retoma
+        return true;
+    }
+
+    function voltarPopup() {
+        if (currentStoryIndex <= 0) return;
+
+        clearStoryTimer();
+        loadStory(currentStoryIndex - 1);
+        setTimeout(startStoryProgress, 80);
+    }
+
+    function avancarPopup() {
+        clearStoryTimer();
+
+        if (currentStoryIndex < stories.length - 1) {
+            loadStory(currentStoryIndex + 1);
+            setTimeout(startStoryProgress, 80);
+        } else {
+            closePopup();
         }
+    }
+
+    popupBox.addEventListener('pointerdown', (event) => {
+        if (ehBotaoDoPopup(event.target)) return;
+        if (event.pointerType === 'mouse') return; // no PC a pausa é no clique
+
+        if (popupHoldTimer) clearTimeout(popupHoldTimer);
+        popupHolding = false;
+
+        popupHoldTimer = setTimeout(() => {
+            popupHolding = true;
+            if (!isPaused) toggleStoryPlayback(); // pausa
+        }, POPUP_HOLD_DELAY);
+    });
+
+    popupBox.addEventListener('pointerup', (event) => {
+        if (ehBotaoDoPopup(event.target)) return;
+
+        const noPc = event.pointerType === 'mouse';
+
+        if (!noPc && soltarPopup()) return; // estava segurando
 
         const rect = popupBox.getBoundingClientRect();
-        const clickX = event.clientX - rect.left;
-        const halfWidth = rect.width / 2;
+        const x = event.clientX - rect.left;
 
-        if (clickX < halfWidth * 0.8) {
-            if (currentStoryIndex > 0) {
-                clearStoryTimer();
-                loadStory(currentStoryIndex - 1);
-                setTimeout(startStoryProgress, 80);
-            }
+        // Mobile (Instagram): terço esquerdo volta, todo o resto avança
+        if (!noPc) {
+            if (x < rect.width * 0.33) voltarPopup();
+            else avancarPopup();
             return;
         }
 
-        if (clickX > halfWidth * 1.2) {
-            clearStoryTimer();
-            if (currentStoryIndex < stories.length - 1) {
-                loadStory(currentStoryIndex + 1);
-                setTimeout(startStoryProgress, 80);
-            } else {
-                closePopup();
-            }
-            return;
-        }
-
-        toggleStoryPlayback();
+        // PC: laterais navegam, centro pausa
+        if (x < rect.width * 0.33) voltarPopup();
+        else if (x > rect.width * 0.67) avancarPopup();
+        else toggleStoryPlayback();
     });
+
+    popupBox.addEventListener('pointercancel', soltarPopup);
+    popupBox.addEventListener('pointerleave', soltarPopup);
+    popupBox.addEventListener('contextmenu', (event) => event.preventDefault());
 }
 
 if (video) {
@@ -278,12 +325,14 @@ const videoModalBox = videoModal ? videoModal.querySelector('.video-modal__box')
 const videoModalMute = document.getElementById('video-modal-mute');
 const videoModalExpand = document.getElementById('video-modal-expand');
 const videoModalEndBtn = document.getElementById('video-modal-next-group');
+const videoModalEndGo = document.getElementById('video-modal-end-go');
+const videoModalEndExit = document.getElementById('video-modal-end-exit');
 const videoModalEndCover = document.getElementById('video-modal-end-cover');
 const videoModalEndName = document.getElementById('video-modal-end-name');
 const videoModalCount = document.getElementById('video-modal-count');
 
 const STORY_IMAGE_DURATION = 10000; // imagem fica 10s; vídeo usa a própria duração
-const STORY_END_COUNTDOWN = 5;      // segundos até fechar no fim de cada artista
+const STORY_END_COUNTDOWN = 10;     // segundos até seguir para o próximo artista
 
 // Monta a lista de artistas a partir do data-items de cada bolinha
 const storyGroups = storyButtons.map((btn) => ({
@@ -517,8 +566,24 @@ function showEndCard() {
         restante -= 1;
         if (videoModalCount) videoModalCount.textContent = Math.max(0, restante);
 
-        if (restante <= 0) closeStoryModal();
+        // Acabou o tempo: segue para o próximo artista
+        if (restante <= 0) goToNextGroup();
     }, 1000);
+}
+
+function goToNextGroup() {
+    if (groupIndex < 0) return; // popup já fechado
+
+    const proximo = groupIndex + 1;
+
+    clearEndCard();
+
+    if (!storyGroups[proximo] || !storyGroups[proximo].itens.length) {
+        closeStoryModal();
+        return;
+    }
+
+    openGroup(proximo);
 }
 
 // Navega apenas dentro do artista atual
@@ -537,13 +602,13 @@ function goToItem(step) {
     showItem(proximo);
 }
 
-function toggleStoryPause() {
-    storyPaused = !storyPaused;
-    videoModal.classList.toggle('is-paused', storyPaused);
+function setStoryPaused(paused) {
+    storyPaused = paused;
+    videoModal.classList.toggle('is-paused', paused);
 
     if (!storyMedia || storyMedia.tagName !== 'VIDEO') return;
 
-    if (storyPaused) storyMedia.pause();
+    if (paused) storyMedia.pause();
     else storyMedia.play().catch(() => {});
 }
 
@@ -572,34 +637,78 @@ if (storiesTrack) {
     });
 }
 
-/* Toque na tela: terço esquerdo volta, terço direito avança, meio pausa */
+/* Mobile: toque rápido nas laterais navega, segurar pausa enquanto o dedo fica na tela.
+   PC: clique padrão — laterais navegam, centro pausa/retoma.                          */
+const HOLD_DELAY = 220; // ms para diferenciar toque de "segurar"
+
+let holdTimer = null;
+let isHolding = false;
+
+function cancelHold() {
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = null;
+}
+
+function releaseHold() {
+    cancelHold();
+
+    if (!isHolding) return false; // era toque rápido
+
+    isHolding = false;
+    setStoryPaused(false);
+    return true; // era "segurar": não navega
+}
+
 if (videoModalPlayer) {
-    videoModalPlayer.addEventListener('click', (event) => {
+    videoModalPlayer.addEventListener('pointerdown', (event) => {
         if (videoModal.classList.contains('is-end')) return;
+        if (event.pointerType === 'mouse') return; // no PC a pausa é no clique
+
+        cancelHold();
+        isHolding = false;
+
+        holdTimer = setTimeout(() => {
+            isHolding = true;
+            setStoryPaused(true);
+        }, HOLD_DELAY);
+    });
+
+    videoModalPlayer.addEventListener('pointerup', (event) => {
+        if (videoModal.classList.contains('is-end')) return;
+
+        const noPc = event.pointerType === 'mouse';
+
+        if (!noPc && releaseHold()) return; // estava segurando: só retoma
 
         const rect = videoModalPlayer.getBoundingClientRect();
         const x = event.clientX - rect.left;
 
-        if (x < rect.width * 0.33) {
-            goToItem(-1);
+        // Mobile (Instagram): terço esquerdo volta, todo o resto avança
+        if (!noPc) {
+            if (x < rect.width * 0.33) goToItem(-1);
+            else goToItem(1);
             return;
         }
 
-        if (x > rect.width * 0.67) {
-            goToItem(1);
-            return;
-        }
-
-        toggleStoryPause();
+        // PC: laterais navegam, centro pausa
+        if (x < rect.width * 0.33) goToItem(-1);
+        else if (x > rect.width * 0.67) goToItem(1);
+        else setStoryPaused(!storyPaused);
     });
+
+    // Dedo saiu da área ou o gesto foi cancelado: retoma
+    videoModalPlayer.addEventListener('pointercancel', releaseHold);
+    videoModalPlayer.addEventListener('pointerleave', releaseHold);
+
+    // Segurar não deve arrastar a imagem nem abrir menu do sistema
+    videoModalPlayer.addEventListener('dragstart', (event) => event.preventDefault());
+    videoModalPlayer.addEventListener('contextmenu', (event) => event.preventDefault());
 }
 
-if (videoModalEndBtn) {
-    videoModalEndBtn.addEventListener('click', () => {
-        clearEndCard();
-        openGroup(groupIndex + 1);
-    });
-}
+// Foto do próximo e botão "Avançar" fazem a mesma coisa
+if (videoModalEndBtn) videoModalEndBtn.addEventListener('click', goToNextGroup);
+if (videoModalEndGo) videoModalEndGo.addEventListener('click', goToNextGroup);
+if (videoModalEndExit) videoModalEndExit.addEventListener('click', closeStoryModal);
 
 if (videoModalMute) {
     videoModalMute.addEventListener('click', (event) => {

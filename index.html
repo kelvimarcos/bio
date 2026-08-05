@@ -30,7 +30,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
     <link rel="manifest" href="favicon_io/site.webmanifest">
-    <link rel="stylesheet" href="style.css?v=36">
+    <link rel="stylesheet" href="style.css?v=40">
 </head>
 
 <body>
@@ -77,8 +77,14 @@
                 </button>
 
                 <p class="video-modal__end-hint">
-                    Fechando em <span id="video-modal-count">5</span>s
+                    Próximo em <span id="video-modal-count">10</span>s
                 </p>
+
+                <div class="video-modal__end-actions">
+                    <button class="video-modal__end-action" id="video-modal-end-exit" type="button">Sair</button>
+                    <button class="video-modal__end-action video-modal__end-action--main" id="video-modal-end-go"
+                        type="button">Avançar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -248,7 +254,7 @@
 
     </main>
 
-    <script defer src="script.js?v=36"></script>
+    <script defer src="script.js?v=40"></script>
 </body>
 
 </html>
