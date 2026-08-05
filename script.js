@@ -374,10 +374,25 @@ window.addEventListener('load', () => {
 const chatBubbleText = chatBubble ? chatBubble.querySelector('.chat-bubble__text') : null;
 
 const BUBBLE_START = 400;    // tempo até o balão aparecer (já em "digitando")
-const BUBBLE_TYPING = 1400;  // duração do "digitando" entre as mensagens
-const BUBBLE_READ = 1800;    // tempo que cada mensagem fica na tela
+// Tempo que cada mensagem fica na tela, na ordem do BUBBLE_MESSAGES
+const BUBBLE_READ = [1800, 1500, 1800];
 
-const BUBBLE_MESSAGES = ['Opa!', 'Clique aqui', 'Conheça minha história'];
+// "Digitando" dura conforme o tamanho da mensagem que vem a seguir
+const TYPING_PER_CHAR = 45;  // ms por caractere
+const TYPING_MIN = 900;
+const TYPING_MAX = 2400;
+
+// O \n é a quebra de linha do balão
+const BUBBLE_MESSAGES = [
+    'Opa!',
+    'Fico feliz\npor está aqui',
+    'Conheça minha\nhistória'
+];
+
+function typingTimeFor(text) {
+    const length = (text || '').replace(/\s+/g, ' ').trim().length;
+    return Math.min(TYPING_MAX, Math.max(TYPING_MIN, length * TYPING_PER_CHAR));
+}
 
 let bubbleTimers = [];
 
@@ -391,9 +406,19 @@ function hideChatBubble() {
 
     if (!chatBubble) return;
     chatBubble.classList.remove('is-visible');
+    setBubbleTyping(false);
+}
+
+// Liga/desliga o estado "digitando" no balão
+function setBubbleTyping(typing) {
+    if (!chatBubble) return;
+
+    chatBubble.classList.toggle('is-typing', typing);
 }
 
 function showBubbleMessage(index) {
+    setBubbleTyping(false);
+
     chatBubbleText.textContent = BUBBLE_MESSAGES[index];
     chatBubble.classList.add('is-message');
 
@@ -406,14 +431,19 @@ function showBubbleMessage(index) {
 
     scheduleBubble(() => {
         chatBubble.classList.remove('is-message'); // volta pro "digitando"
-        scheduleBubble(() => showBubbleMessage(index + 1), BUBBLE_TYPING);
-    }, BUBBLE_READ);
+        setBubbleTyping(true);
+        scheduleBubble(
+            () => showBubbleMessage(index + 1),
+            typingTimeFor(BUBBLE_MESSAGES[index + 1])
+        );
+    }, BUBBLE_READ[index] ?? 1800);
 }
 
 if (chatBubble && chatBubbleText) {
     scheduleBubble(() => {
         chatBubble.classList.add('is-visible'); // entra já em "digitando"
-        scheduleBubble(() => showBubbleMessage(0), BUBBLE_TYPING);
+        setBubbleTyping(true);
+        scheduleBubble(() => showBubbleMessage(0), typingTimeFor(BUBBLE_MESSAGES[0]));
     }, BUBBLE_START);
 
     chatBubble.addEventListener('click', () => {
