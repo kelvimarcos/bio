@@ -456,11 +456,10 @@ body.is-loaded .topbar__perfil img {
     line-height: 1.25;
     text-align: center;
     opacity: .85;
-    /* nome comprido quebra para a linha de baixo em vez de virar "..." */
+    /* nome comprido quebra para a linha de baixo, sempre entre palavras e sem hífen */
     white-space: normal;
     overflow-wrap: break-word;
-    word-break: break-word;
-    hyphens: auto;
+    hyphens: none;
 }
 
 /* ---------- Popup do vídeo ---------- */
