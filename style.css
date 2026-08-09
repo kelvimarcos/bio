@@ -608,12 +608,6 @@ body.is-loaded .topbar__perfil img {
 
 .video-modal.is-end .video-modal__end { display: flex; }
 
-.video-modal__end-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, .65);
-}
-
 .video-modal__end-btn {
     display: flex;
     flex-direction: column;
@@ -735,6 +729,54 @@ body.is-loaded .topbar__perfil img {
     background: #38c6ff;
 }
 
+/* ---------- Aviso "ative o som" ---------- */
+.sound-hint {
+    position: absolute;
+    right: 12px;
+    bottom: 54px;
+    z-index: 9;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .7);
+    backdrop-filter: blur(4px);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px);
+    transition: opacity .25s ease, transform .25s ease, visibility .25s;
+}
+
+/* Só aparece enquanto o usuário não ativou o som */
+.popup-overlay.is-hint .sound-hint,
+.video-modal.is-hint .sound-hint {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    animation: sound-hint-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes sound-hint-pulse {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .popup-overlay.is-hint .sound-hint,
+    .video-modal.is-hint .sound-hint { animation: none; }
+}
+
+/* Story de imagem não tem som: esconde o aviso junto com o mute */
+.video-modal.is-image .sound-hint {
+    opacity: 0;
+    visibility: hidden;
+}
+
 /* Story de imagem não tem som: esconde o mute */
 .video-modal.is-image .video-modal__mute {
     opacity: 0;
@@ -830,12 +872,16 @@ body.is-loaded .topbar__perfil img {
 
 .popup-box {
     position: relative;
-    /* ocupa pouco mais da metade da tela */
-    height: 70vh;
-    width: auto;
+    /* --ratio é trocado pelo JS pela proporção real do vídeo (largura ÷ altura).
+       A largura sai da altura desejada, então a caixa acompanha qualquer formato. */
+    --ratio: 0.5625; /* 9/16 enquanto o vídeo não carrega */
+    --altura: min(70vh, 620px);
+    aspect-ratio: var(--ratio);
+    width: min(90vw, calc(var(--altura) * var(--ratio)));
+    height: auto;
     max-width: 90vw;
-    max-height: 620px;
-    aspect-ratio: 9 / 16;
+    /* vídeo deitado não deixa a caixa virar uma faixa fina */
+    min-height: min(52vh, 460px);
     background: var(--panel);
     border-radius: 16px;
     overflow: hidden;

@@ -1,3 +1,70 @@
+/* ---------- Reprodução HLS (Mux) ----------
+   O Mux entrega .m3u8. Safari e iOS tocam nativo; nos demais navegadores
+   a hls.js é carregada sob demanda, só quando existe um .m3u8 para tocar.  */
+const HLS_CDN = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
+let hlsCarregando = null;
+
+function carregarHls() {
+    if (window.Hls) return Promise.resolve(window.Hls);
+
+    if (!hlsCarregando) {
+        hlsCarregando = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = HLS_CDN;
+            script.onload = () => resolve(window.Hls);
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    return hlsCarregando;
+}
+
+function destruirHls(elemento) {
+    if (elemento && elemento._hls) {
+        elemento._hls.destroy();
+        elemento._hls = null;
+    }
+}
+
+// Aponta o <video> para a fonte, escolhendo o caminho certo (.m3u8 ou arquivo)
+function definirFonteDoVideo(elemento, src) {
+    destruirHls(elemento);
+
+    const ehHls = /\.m3u8(\?|$)/i.test(src);
+
+    if (!ehHls) {
+        elemento.src = src;
+        elemento.load();
+        return;
+    }
+
+    // Safari e iOS tocam HLS sem biblioteca
+    if (elemento.canPlayType('application/vnd.apple.mpegurl')) {
+        elemento.src = src;
+        elemento.load();
+        return;
+    }
+
+    carregarHls()
+        .then((Hls) => {
+            if (!Hls || !Hls.isSupported()) {
+                elemento.src = src;
+                elemento.load();
+                return;
+            }
+
+            const hls = new Hls({ enableWorker: true });
+            hls.loadSource(src);
+            hls.attachMedia(elemento);
+            elemento._hls = hls;
+        })
+        .catch(() => {
+            elemento.src = src;
+            elemento.load();
+        });
+}
+
 const popup = document.getElementById('video-popup');
 const popupBox = popup ? popup.querySelector('.popup-box') : null;
 const video = popup ? popup.querySelector('.popup-video') : null;
@@ -5,11 +72,16 @@ const openBtn = document.getElementById('open-popup');
 const closeBtn = document.getElementById('close-popup');
 const muteBtn = document.getElementById('mute-btn');
 const expandBtn = document.getElementById('popup-expand');
+
+// O aviso de som some de vez depois do primeiro clique no botão
+let avisoSomVisto = false;
 const chatBubble = document.getElementById('chat-bubble');
 const progressContainer = document.getElementById('story-progress');
 const shareBtn = document.getElementById('share-btn');
+/* Vídeos do popup da história (topo).
+   Playback ID do Mux vira: https://stream.mux.com/PLAYBACK_ID.m3u8 */
 const stories = [
-    { src: 'video/video8.mp4' }
+    { src: 'https://stream.mux.com/Bip1E47IJ9GFIdTXvzC4x9heMzkRGPD2TBZpv56xo7E.m3u8' }
 
 ];
  
@@ -93,8 +165,7 @@ function loadStory(index) {
         return;
     }
 
-    video.src = stories[index].src;
-    video.load();
+    definirFonteDoVideo(video, stories[index].src);
     video.currentTime = 0;
     video.muted = isMuted;
 
@@ -149,6 +220,7 @@ function openPopup() {
         muteBtn.textContent = '🔇';
         muteBtn.setAttribute('aria-label', 'Ativar som');
     }
+    popup.classList.toggle('is-hint', !avisoSomVisto);
     loadStory(0);
     setTimeout(startStoryProgress, 120);
 }
@@ -160,8 +232,10 @@ function closePopup() {
     clearStoryTimer();
     video.pause();
     video.currentTime = 0;
+    destruirHls(video);
     video.removeAttribute('src');
     video.load();
+    if (popupBox) popupBox.style.removeProperty('--ratio'); // volta ao padrão do CSS
     progressElapsed = 0;
     isMuted = true;
     isPaused = false;
@@ -189,6 +263,9 @@ if (muteBtn && video) {
         video.muted = isMuted;
         muteBtn.textContent = isMuted ? '🔇' : '🔊';
         muteBtn.setAttribute('aria-label', isMuted ? 'Ativar som' : 'Silenciar');
+
+        avisoSomVisto = true;
+        popup.classList.remove('is-hint');
     });
 }
 
@@ -281,6 +358,11 @@ if (video) {
     });
 
     video.addEventListener('loadedmetadata', () => {
+        // A caixa assume a proporção real do vídeo (retrato, quadrado ou paisagem)
+        if (popupBox && video.videoWidth && video.videoHeight) {
+            popupBox.style.setProperty('--ratio', (video.videoWidth / video.videoHeight).toFixed(4));
+        }
+
         if (popup && popup.classList.contains('active')) {
             progressElapsed = 0;
             startStoryProgress();
@@ -429,6 +511,7 @@ function startStoryLoop() {
 function clearStoryMedia() {
     if (storyMedia && storyMedia.tagName === 'VIDEO') {
         storyMedia.pause();
+        destruirHls(storyMedia);
         storyMedia.removeAttribute('src');
         storyMedia.load();
     }
@@ -449,7 +532,7 @@ function closeStoryModal() {
     stopStoryLoop();
     clearStoryMedia();
     clearEndCard();
-    videoModal.classList.remove('active', 'is-paused', 'is-image');
+    videoModal.classList.remove('active', 'is-paused', 'is-image', 'is-hint');
     groupIndex = -1;
     itemIndex = 0;
     storyElapsed = 0;
@@ -467,6 +550,8 @@ function setStoryMuted(muted) {
         videoModalMute.textContent = muted ? '🔇' : '🔊';
         videoModalMute.setAttribute('aria-label', muted ? 'Ativar som' : 'Silenciar');
     }
+
+    videoModal.classList.toggle('is-hint', muted && !avisoSomVisto);
 }
 
 function showItem(index) {
@@ -489,12 +574,12 @@ function showItem(index) {
 
     if (isVideo) {
         const video = document.createElement('video');
-        video.src = item.src;
         video.playsInline = true;
         video.autoplay = true;
         video.preload = 'auto';
         video.muted = storyMuted;
         video.setAttribute('playsinline', '');
+        definirFonteDoVideo(video, item.src); // aceita .mp4 e .m3u8 do Mux
 
         video.addEventListener('loadedmetadata', () => {
             storyDuration = (video.duration && Number.isFinite(video.duration))
@@ -714,7 +799,9 @@ if (videoModalEndExit) videoModalEndExit.addEventListener('click', closeStoryMod
 if (videoModalMute) {
     videoModalMute.addEventListener('click', (event) => {
         event.stopPropagation();
+        avisoSomVisto = true;
         setStoryMuted(!storyMuted);
+        videoModal.classList.remove('is-hint');
     });
 }
 
