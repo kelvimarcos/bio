@@ -20,6 +20,12 @@ function carregarHls() {
     return hlsCarregando;
 }
 
+// Miniatura do próprio Mux, usada como poster enquanto o vídeo carrega
+function posterDoMux(src) {
+    const achou = /stream\.mux\.com\/([^./?]+)\.m3u8/.exec(src || '');
+    return achou ? `https://image.mux.com/${achou[1]}/thumbnail.jpg?time=0` : '';
+}
+
 function destruirHls(elemento) {
     if (elemento && elemento._hls) {
         elemento._hls.destroy();
@@ -165,6 +171,10 @@ function loadStory(index) {
         return;
     }
 
+    const poster = posterDoMux(stories[index].src);
+    if (poster) video.poster = poster;
+
+    popup.classList.add('is-loading');
     definirFonteDoVideo(video, stories[index].src);
     video.currentTime = 0;
     video.muted = isMuted;
@@ -228,7 +238,7 @@ function openPopup() {
 function closePopup() {
     if (!popup || !video) return;
 
-    popup.classList.remove('active');
+    popup.classList.remove('active', 'is-loading');
     clearStoryTimer();
     video.pause();
     video.currentTime = 0;
@@ -353,6 +363,15 @@ if (popupBox) {
 }
 
 if (video) {
+    // Indicador de carregamento enquanto o vídeo não tem dados para tocar
+    ['playing', 'loadeddata', 'canplay'].forEach((evento) => {
+        video.addEventListener(evento, () => popup.classList.remove('is-loading'));
+    });
+
+    ['waiting', 'stalled'].forEach((evento) => {
+        video.addEventListener(evento, () => popup.classList.add('is-loading'));
+    });
+
     video.addEventListener('ended', () => {
         goToNextStory();
     });
@@ -532,7 +551,7 @@ function closeStoryModal() {
     stopStoryLoop();
     clearStoryMedia();
     clearEndCard();
-    videoModal.classList.remove('active', 'is-paused', 'is-image', 'is-hint');
+    videoModal.classList.remove('active', 'is-paused', 'is-image', 'is-hint', 'is-loading');
     groupIndex = -1;
     itemIndex = 0;
     storyElapsed = 0;
@@ -579,6 +598,19 @@ function showItem(index) {
         video.preload = 'auto';
         video.muted = storyMuted;
         video.setAttribute('playsinline', '');
+
+        const poster = posterDoMux(item.src);
+        if (poster) video.poster = poster;
+
+        // Indicador enquanto o vídeo não tem dados suficientes
+        videoModal.classList.add('is-loading');
+        ['playing', 'loadeddata', 'canplay'].forEach((evento) => {
+            video.addEventListener(evento, () => videoModal.classList.remove('is-loading'));
+        });
+        ['waiting', 'stalled'].forEach((evento) => {
+            video.addEventListener(evento, () => videoModal.classList.add('is-loading'));
+        });
+
         definirFonteDoVideo(video, item.src); // aceita .mp4 e .m3u8 do Mux
 
         video.addEventListener('loadedmetadata', () => {
@@ -603,6 +635,7 @@ function showItem(index) {
         img.src = item.src;
         img.alt = '';
 
+        videoModal.classList.remove('is-loading'); // imagem não precisa de espera
         storyDuration = STORY_IMAGE_DURATION;
         storyMedia = img;
         videoModalPlayer.appendChild(img);

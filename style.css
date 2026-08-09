@@ -729,6 +729,34 @@ body.is-loaded .topbar__perfil img {
     background: #38c6ff;
 }
 
+/* ---------- Indicador de carregamento ---------- */
+.media-loading {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, .22);
+    border-top-color: var(--white);
+    z-index: 7;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .2s ease, visibility .2s;
+}
+
+.popup-overlay.is-loading .media-loading,
+.video-modal.is-loading .media-loading {
+    opacity: 1;
+    visibility: visible;
+    animation: media-spin .8s linear infinite;
+}
+
+@keyframes media-spin {
+    to { transform: rotate(360deg); }
+}
+
 /* ---------- Aviso "ative o som" ---------- */
 .sound-hint {
     position: absolute;
