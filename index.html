@@ -4,23 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Google Analytics - G-Q7207GW1HK -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q7207GW1HK"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-Q7207GW1HK');
-    </script>
+    <!-- Analytics: as tags antigas (Google Analytics e Microsoft Clarity) foram
+         removidas. Cole aqui os novos códigos quando tiver as contas. -->
 
-    <!-- Microsoft Clarity - tfwazt7wte -->
-    <script type="text/javascript">
-        (function (c, l, a, r, i, t, y) {
-            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
-            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
-            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
-        })(window, document, "clarity", "script", "tfwazt7wte");
-    </script>
     <title>Don Diego Teixeira</title>
     <link rel="preconnect" href="https://stream.mux.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,30 +17,13 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
     <link rel="manifest" href="favicon_io/site.webmanifest">
-    <link rel="stylesheet" href="style.css?v=51">
+    <link rel="stylesheet" href="style.css?v=62">
 
 
 
 </head>
 
 <body>
-
-    <!-- Popup de vídeo -->
-    <div class="popup-overlay" id="video-popup" role="dialog" aria-modal="true" aria-label="Vídeo">
-        <div class="popup-box">
-            <div class="story-progress" id="story-progress" aria-hidden="true"></div>
-            <button class="popup-close" id="close-popup" aria-label="Fechar">&#x2715;</button>
-            <button class="popup-expand" id="popup-expand" aria-label="Tela cheia">&#9974;</button>
-            <button class="popup-mute" id="mute-btn" aria-label="Ativar som">🔇</button>
-            <span class="sound-hint" id="popup-sound-hint">Toque para ativar o som</span>
-            <span class="media-loading" aria-hidden="true"></span>
-            <video class="popup-video" src="video/video8.mp4" playsinline muted preload="metadata"
-                aria-label="Vídeo do Don Diego Style">
-                Seu navegador não suporta reprodução de vídeo.
-            </video>
-
-        </div>
-    </div>
 
     <!-- Popup dos stories "Passou por aqui" -->
     <div class="video-modal" id="video-modal" role="dialog" aria-modal="true" aria-label="Stories">
@@ -105,15 +74,15 @@
             <!-- Topbar: perfil 2 esquerda | compartilhar direita -->
             <div class="topbar">
                 <div class="topbar__left">
-                    <button class="topbar__perfil" id="open-popup" aria-label="Abrir vídeo">
-                        <img src="img/mensagemIcon.png" alt="Conheça o Don Diego">
-                    </button>
+                    <span class="topbar__perfil">
+                        <img src="img/mensagemIcon.png" alt="Don Diego Teixeira">
+                    </span>
 
-                    <button class="chat-bubble" id="chat-bubble" type="button" aria-label="Abrir vídeo">
+                    <button class="chat-bubble" id="chat-bubble" type="button" aria-label="Dispensar mensagem">
                         <span class="chat-bubble__dots" aria-hidden="true">
                             <span></span><span></span><span></span>
                         </span>
-                        <span class="chat-bubble__text">Oopa! 👋</span>
+                        <span class="chat-bubble__text">E aí!</span>
                     </button>
                 </div>
                 <button class="topbar__share" id="share-btn" aria-label="Compartilhar">
@@ -133,41 +102,41 @@
 
         </header>
 
-        <section class="panel" aria-label="Links">
+        <section class="panel" id="links" aria-label="Links">
             <div class="cards">
                 <a class="link"
-                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    href="https://wa.me/5582991794334?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
                     target="_blank" rel="noopener noreferrer">
                     <img src="img/img1.webp" alt="imagem de um botão">
                 </a>
 
                       <a class="link"
-                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    href="https://donstyle.com.br/"
                     target="_blank" rel="noopener noreferrer">
                     <img src="img/img6.webp" alt="imagem de um botão">
                 </a>
         
                     <a class="link"
-                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    href="https://www.tiktok.com/@dondiegoteixeira"
                     target="_blank" rel="noopener noreferrer">
                     <img src="img/img5.webp" alt="imagem de um botão">
                 </a>
         
                 <a class="link"
-                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    href="https://www.youtube.com/@diegoteixeiradd"
                     target="_blank" rel="noopener noreferrer">
                     <img src="img/img2.webp" alt="imagem de um botão">
                 </a>
                 
                 <a class="link"
-                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    href="https://www.instagram.com/latavelhadamoda/"
                     target="_blank" rel="noopener noreferrer">
                     <img src="img/img4.webp" alt="imagem de um botão">
                 </a>
         
         
                 <a class="link"
-                    href="https://wa.me/5582994095090?text=Ol%C3%A1!%20Vim%20pelo%20instagram%20e%20tenho%20interesse%20em%20comprar"
+                    href="https://www.instagram.com/thealfaiate.br/"
                     target="_blank" rel="noopener noreferrer">
                     <img src="img/img3.webp" alt="imagem de um botão">
                 </a>
@@ -203,21 +172,32 @@
         <section class="stories" aria-label="Passou por aqui">
             <h2 class="stories__title">PASSOU POR AQUI</h2>
 
+            <!-- Ordem: por alcance do nome — o maior primeiro, que é quem puxa o clique -->
             <ul class="stories__track">
                 <li class="story">
                     <button class="story__btn" type="button"
-                        data-items="video:video/video8.mp4 | video:video/video3.mp4 | image:img/foto1.webp | image:img/pc.webp"
+                        data-items="video:https://stream.mux.com/5BinyuVX9u02n6jcg9P5A6nE1nokyFMLBtMpwayaaG5Y.m3u8"
                         aria-label="Ver stories de Carlinhos Maia">
                         <span class="story__ring">
-                            <img class="story__cover" src="img/personalidade1.webp" alt="" loading="lazy">
+                            <img class="story__cover" src="img/personalidade3.webp" alt="" loading="lazy">
                         </span>
-                        <span class="story__label">Thiago Freitas</span>
+                        <span class="story__label">Carlinhos Maia</span>
                     </button>
                 </li>
                 <li class="story">
                     <button class="story__btn" type="button"
-                        data-items="image:img/foto1.webp | video:video/video3.mp4"
-                        aria-label="Ver stories de Nathanzinho Lima">
+                        data-items="video:https://stream.mux.com/Cofrw8k5fKTCrHdg01AhrokoqBBo53h99BfIY2pDn8P4.m3u8"
+                        aria-label="Ver stories de Gustavo Lima">
+                        <span class="story__ring">
+                            <img class="story__cover" src="img/personalidade4.webp" alt="" loading="lazy">
+                        </span>
+                        <span class="story__label">Gustavo Lima</span>
+                    </button>
+                </li>
+                <li class="story">
+                    <button class="story__btn" type="button"
+                        data-items="video:https://stream.mux.com/Va9XrIUA9ict3hdEvdAcMRjBgZXqTe01FsbaifYS2RgQ.m3u8 | video:https://stream.mux.com/Q8At4O1H1pT8ltwhOycp88pr02F016pSIZgDamtgVeBBE.m3u8"
+                        aria-label="Ver stories de Lucas Guimarães">
                         <span class="story__ring">
                             <img class="story__cover" src="img/personalidade2.webp" alt="" loading="lazy">
                         </span>
@@ -226,32 +206,12 @@
                 </li>
                 <li class="story">
                     <button class="story__btn" type="button"
-                        data-items="video:video/video3.mp4 | image:img/pc.webp | image:img/foto1.webp"
-                        aria-label="Ver stories de Lucas Guimarães">
+                        data-items="video:https://stream.mux.com/vbdPQzTYXMORrFSq00EoTDBBE76PgQUNmgbR6uxvAlco.m3u8"
+                        aria-label="Ver stories de Thiago Freitas">
                         <span class="story__ring">
-                            <img class="story__cover" src="img/foto1.webp" alt="" loading="lazy">
+                            <img class="story__cover" src="img/personalidade1.webp" alt="" loading="lazy">
                         </span>
-                        <span class="story__label">Lucas Guimarães</span>
-                    </button>
-                </li>
-                <li class="story">
-                    <button class="story__btn" type="button"
-                        data-items="image:img/pc.webp"
-                        aria-label="Ver stories de Nuzio">
-                        <span class="story__ring">
-                            <img class="story__cover" src="img/foto1.webp" alt="" loading="lazy">
-                        </span>
-                        <span class="story__label">Nuzio</span>
-                    </button>
-                </li>
-                <li class="story">
-                    <button class="story__btn" type="button"
-                        data-items="image:img/foto1.webp | video:video/video8.mp4"
-                        aria-label="Ver stories de Luciano Camargo">
-                        <span class="story__ring">
-                            <img class="story__cover" src="img/foto1.webp" alt="" loading="lazy">
-                        </span>
-                        <span class="story__label">Luciano Camargo</span>
+                        <span class="story__label">Thiago Freitas</span>
                     </button>
                 </li>
             </ul>
@@ -264,7 +224,7 @@
 
     </main>
 
-    <script defer src="script.js?v=51"></script>
+    <script defer src="script.js?v=62"></script>
 </body>
 
 </html>

@@ -71,327 +71,12 @@ function definirFonteDoVideo(elemento, src) {
         });
 }
 
-const popup = document.getElementById('video-popup');
-const popupBox = popup ? popup.querySelector('.popup-box') : null;
-const video = popup ? popup.querySelector('.popup-video') : null;
-const openBtn = document.getElementById('open-popup');
-const closeBtn = document.getElementById('close-popup');
-const muteBtn = document.getElementById('mute-btn');
-const expandBtn = document.getElementById('popup-expand');
-
-// O aviso de som some de vez depois do primeiro clique no botão
+// O aviso de som dos stories "Passou por aqui" some de vez depois do primeiro clique
 let avisoSomVisto = false;
+
 const chatBubble = document.getElementById('chat-bubble');
-const progressContainer = document.getElementById('story-progress');
 const shareBtn = document.getElementById('share-btn');
-/* Vídeos do popup da história (topo).
-   Playback ID do Mux vira: https://stream.mux.com/PLAYBACK_ID.m3u8 */
-const stories = [
-    { src: 'https://stream.mux.com/Bip1E47IJ9GFIdTXvzC4x9heMzkRGPD2TBZpv56xo7E.m3u8' }
 
-];
- 
-let currentStoryIndex = 0;
-let progressTimer = null;
-let progressStartTime = 0;
-let progressElapsed = 0;
-let isMuted = false;
-let isPaused = false;
-
-function resetProgressBar() {
-    if (!progressContainer) return;
-
-    progressContainer.innerHTML = stories.map(() => `
-        <span class="story-progress__segment">
-            <span class="story-progress__fill"></span>
-        </span>
-    `).join('');
-}
-
-function getCurrentStoryDuration() {
-    const storyDuration = stories[currentStoryIndex]?.duration;
-    const duration = (typeof storyDuration === 'number' && storyDuration > 0) ? storyDuration : (video ? video.duration : 0);
-    return (typeof duration === 'number' && duration > 0 && Number.isFinite(duration)) ? duration : 5;
-}
-
-function updateProgressBar() {
-    if (!progressContainer) return;
-
-    const segments = progressContainer.querySelectorAll('.story-progress__segment');
-    const duration = getCurrentStoryDuration();
-    const elapsed = Math.min(progressElapsed, duration);
-    const percentage = duration > 0 ? Math.min(100, (elapsed / duration) * 100) : 0;
-
-    segments.forEach((segment, index) => {
-        const fill = segment.querySelector('.story-progress__fill');
-
-        if (index < currentStoryIndex) {
-            fill.style.width = '100%';
-        } else if (index === currentStoryIndex) {
-            fill.style.width = `${percentage}%`;
-        } else {
-            fill.style.width = '0%';
-        }
-    });
-}
-
-function clearStoryTimer() {
-    if (progressTimer) {
-        clearInterval(progressTimer);
-        progressTimer = null;
-    }
-}
-
-function startStoryProgress() {
-    clearStoryTimer();
-    const duration = getCurrentStoryDuration();
-    progressStartTime = performance.now() - (progressElapsed * 1000);
-    updateProgressBar();
-
-    progressTimer = setInterval(() => {
-        if (isPaused) return;
-
-        progressElapsed = (performance.now() - progressStartTime) / 1000;
-        updateProgressBar();
-
-        if (progressElapsed >= duration) {
-            clearStoryTimer();
-            goToNextStory();
-        }
-    }, 100);
-}
-
-function loadStory(index) {
-    currentStoryIndex = index;
-    progressElapsed = 0;
-    isPaused = false;
-
-    if (!stories[index] || !video) {
-        closePopup();
-        return;
-    }
-
-    const poster = posterDoMux(stories[index].src);
-    if (poster) video.poster = poster;
-
-    popup.classList.add('is-loading');
-    definirFonteDoVideo(video, stories[index].src);
-    video.currentTime = 0;
-    video.muted = isMuted;
-
-    video.play().catch((error) => {
-        console.warn('Falha ao reproduzir vídeo automaticamente, tentando com mudo.', error);
-        isMuted = true;
-        video.muted = true;
-        if (muteBtn) {
-            muteBtn.textContent = '🔇';
-            muteBtn.setAttribute('aria-label', 'Ativar som');
-        }
-        video.play().catch(() => {});
-    });
-}
-
-function goToNextStory() {
-    clearStoryTimer();
-
-    if (currentStoryIndex < stories.length - 1) {
-        loadStory(currentStoryIndex + 1);
-        setTimeout(startStoryProgress, 80);
-    } else {
-        closePopup();
-    }
-}
-
-function toggleStoryPlayback() {
-    if (isPaused) {
-        isPaused = false;
-        video.play().catch(() => {});
-        startStoryProgress();
-        return;
-    }
-
-    isPaused = true;
-    clearStoryTimer();
-    progressElapsed = Math.min((performance.now() - progressStartTime) / 1000, getCurrentStoryDuration());
-    video.pause();
-}
-
-function openPopup() {
-    if (!popup || !video) return;
-
-    popup.classList.add('active');
-    hideChatBubble();
-    document.body.style.overflow = 'hidden';
-    resetProgressBar();
-    updateProgressBar();
-    isMuted = true; // começa sem som; o usuário libera no botão
-    isPaused = false;
-    if (muteBtn) {
-        muteBtn.textContent = '🔇';
-        muteBtn.setAttribute('aria-label', 'Ativar som');
-    }
-    popup.classList.toggle('is-hint', !avisoSomVisto);
-    loadStory(0);
-    setTimeout(startStoryProgress, 120);
-}
-
-function closePopup() {
-    if (!popup || !video) return;
-
-    popup.classList.remove('active', 'is-loading');
-    clearStoryTimer();
-    video.pause();
-    video.currentTime = 0;
-    destruirHls(video);
-    video.removeAttribute('src');
-    video.load();
-    if (popupBox) popupBox.style.removeProperty('--ratio'); // volta ao padrão do CSS
-    progressElapsed = 0;
-    isMuted = true;
-    isPaused = false;
-    if (muteBtn) {
-        muteBtn.textContent = '🔇';
-        muteBtn.setAttribute('aria-label', 'Ativar som');
-    }
-    document.body.style.overflow = '';
-}
-
-if (openBtn) openBtn.addEventListener('click', openPopup);
-if (closeBtn) closeBtn.addEventListener('click', closePopup);
-
-if (expandBtn) {
-    expandBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        toggleFullscreen(popupBox, video);
-    });
-}
-
-if (muteBtn && video) {
-    muteBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        isMuted = !isMuted;
-        video.muted = isMuted;
-        muteBtn.textContent = isMuted ? '🔇' : '🔊';
-        muteBtn.setAttribute('aria-label', isMuted ? 'Ativar som' : 'Silenciar');
-
-        avisoSomVisto = true;
-        popup.classList.remove('is-hint');
-    });
-}
-
-/* Toque rápido navega; segurar pausa enquanto o dedo estiver na tela */
-if (popupBox) {
-    const POPUP_HOLD_DELAY = 220;
-    let popupHoldTimer = null;
-    let popupHolding = false;
-
-    function ehBotaoDoPopup(target) {
-        return target.closest('.popup-close') ||
-            target.closest('.popup-mute') ||
-            target.closest('.popup-expand');
-    }
-
-    function soltarPopup() {
-        if (popupHoldTimer) clearTimeout(popupHoldTimer);
-        popupHoldTimer = null;
-
-        if (!popupHolding) return false;
-
-        popupHolding = false;
-        if (isPaused) toggleStoryPlayback(); // retoma
-        return true;
-    }
-
-    function voltarPopup() {
-        if (currentStoryIndex <= 0) return;
-
-        clearStoryTimer();
-        loadStory(currentStoryIndex - 1);
-        setTimeout(startStoryProgress, 80);
-    }
-
-    function avancarPopup() {
-        clearStoryTimer();
-
-        if (currentStoryIndex < stories.length - 1) {
-            loadStory(currentStoryIndex + 1);
-            setTimeout(startStoryProgress, 80);
-        } else {
-            closePopup();
-        }
-    }
-
-    popupBox.addEventListener('pointerdown', (event) => {
-        if (ehBotaoDoPopup(event.target)) return;
-        if (event.pointerType === 'mouse') return; // no PC a pausa é no clique
-
-        if (popupHoldTimer) clearTimeout(popupHoldTimer);
-        popupHolding = false;
-
-        popupHoldTimer = setTimeout(() => {
-            popupHolding = true;
-            if (!isPaused) toggleStoryPlayback(); // pausa
-        }, POPUP_HOLD_DELAY);
-    });
-
-    popupBox.addEventListener('pointerup', (event) => {
-        if (ehBotaoDoPopup(event.target)) return;
-
-        const noPc = event.pointerType === 'mouse';
-
-        if (!noPc && soltarPopup()) return; // estava segurando
-
-        const rect = popupBox.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-
-        // Mobile (Instagram): terço esquerdo volta, todo o resto avança
-        if (!noPc) {
-            if (x < rect.width * 0.33) voltarPopup();
-            else avancarPopup();
-            return;
-        }
-
-        // PC: laterais navegam, centro pausa
-        if (x < rect.width * 0.33) voltarPopup();
-        else if (x > rect.width * 0.67) avancarPopup();
-        else toggleStoryPlayback();
-    });
-
-    popupBox.addEventListener('pointercancel', soltarPopup);
-    popupBox.addEventListener('pointerleave', soltarPopup);
-    popupBox.addEventListener('contextmenu', (event) => event.preventDefault());
-}
-
-if (video) {
-    // Indicador de carregamento enquanto o vídeo não tem dados para tocar
-    ['playing', 'loadeddata', 'canplay'].forEach((evento) => {
-        video.addEventListener(evento, () => popup.classList.remove('is-loading'));
-    });
-
-    ['waiting', 'stalled'].forEach((evento) => {
-        video.addEventListener(evento, () => popup.classList.add('is-loading'));
-    });
-
-    video.addEventListener('ended', () => {
-        goToNextStory();
-    });
-
-    video.addEventListener('loadedmetadata', () => {
-        // A caixa assume a proporção real do vídeo (retrato, quadrado ou paisagem)
-        if (popupBox && video.videoWidth && video.videoHeight) {
-            popupBox.style.setProperty('--ratio', (video.videoWidth / video.videoHeight).toFixed(4));
-        }
-
-        if (popup && popup.classList.contains('active')) {
-            progressElapsed = 0;
-            startStoryProgress();
-        }
-    });
-}
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && popup && popup.classList.contains('active')) closePopup();
-});
 
 // Compartilhar link
 if (shareBtn) {
@@ -871,18 +556,21 @@ const chatBubbleText = chatBubble ? chatBubble.querySelector('.chat-bubble__text
 
 const BUBBLE_START = 400;    // tempo até o balão aparecer (já em "digitando")
 
-// O \n é a quebra de linha do balão
+/* Saudação e direcionamento de quem acabou de entrar na página.
+   Tom de conversa: o cliente tem que sentir que está falando direto com ele.
+   O \n é a quebra de linha do balão. */
 const BUBBLE_MESSAGES = [
-    'Oopa! 👋',
-    'Conheça um pouco\nda minha trajetória.',
-    'Clique aqui'
+    'E aí!',
+    'Que bom te ver\npor aqui.',
+    'Fica à vontade,\ntá tudo aqui embaixo.',
+    'Qualquer coisa,\nme chama.'
 ];
 
 // Quanto tempo o "digitando" roda antes de cada mensagem (mesma ordem acima)
-const BUBBLE_TYPING = [900, 2000, 1000];
+const BUBBLE_TYPING = [900, 1600, 1800, 1800];
 
 // Quanto tempo cada mensagem fica na tela (a última fica fixa)
-const BUBBLE_READ = [1800, 5000, null];
+const BUBBLE_READ = [1800, 3000, 3600, null];
 
 // Sobra para mensagens novas sem tempo definido: calcula pelo tamanho do texto
 const TYPING_PER_CHAR = 45;  // ms por caractere
@@ -945,10 +633,8 @@ if (chatBubble && chatBubbleText) {
         scheduleBubble(() => showBubbleMessage(0), typingTimeFor(0));
     }, BUBBLE_START);
 
-    chatBubble.addEventListener('click', () => {
-        hideChatBubble();
-        openPopup();
-    });
+    // Sem popup: o balão só conversa. Um toque dispensa a mensagem.
+    chatBubble.addEventListener('click', hideChatBubble);
 }
 
 
